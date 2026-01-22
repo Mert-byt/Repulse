@@ -1,0 +1,76 @@
+<svg width="64" height="64" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- Fragment Gradients to match the unique shading of each piece -->
+        <!-- 1. G-Arc Top (Darkest) -->
+        <linearGradient id="gradTopLeft" x1="100%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#3d3d3d"/>
+            <stop offset="100%" stop-color="#2a2a2a"/>
+        </linearGradient>
+        
+        <!-- 2. G-Arc Bottom (Medium-Dark) -->
+        <linearGradient id="gradBottomLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4a4a4a"/>
+            <stop offset="100%" stop-color="#353535"/>
+        </linearGradient>
+
+        <!-- 3. R-Arc Top (Lightest) -->
+        <linearGradient id="gradTopRight" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#656565"/>
+            <stop offset="100%" stop-color="#505050"/>
+        </linearGradient>
+
+        <!-- 4. R-Leg (Medium) -->
+        <linearGradient id="gradLeg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#555555"/>
+            <stop offset="100%" stop-color="#404040"/>
+        </linearGradient>
+
+        <!-- 5. Center Bar (Dark with metallic shine) -->
+        <linearGradient id="gradBar" x1="0%" y1="50%" x2="100%" y2="50%">
+            <stop offset="0%" stop-color="#404040"/>
+            <stop offset="50%" stop-color="#5a5a5a"/>
+            <stop offset="100%" stop-color="#303030"/>
+        </linearGradient>
+
+        <!-- 6. Tail (Dark) -->
+        <linearGradient id="gradTail" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#454545"/>
+            <stop offset="100%" stop-color="#2b2b2b"/>
+        </linearGradient>
+
+        <!-- Metallic Bevel Effect -->
+        <filter id="bevel3D" x="-50%" y="-50%" width="200%" height="200%">
+            <!-- Cutout/Bevel depth -->
+            <feGaussianBlur in="SourceAlpha" stdDeviation="0.4" result="blur"/>
+            <feSpecularLighting in="blur" surfaceScale="2" specularConstant="1.5" specularExponent="35" lighting-color="#ffffff" result="spec">
+                <fePointLight x="-5000" y="-10000" z="5000"/>
+            </feSpecularLighting>
+            <feComposite in="spec" in2="SourceAlpha" operator="in" result="spec"/>
+            <feComposite in="SourceGraphic" in2="spec" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+            <!-- Subtle drop shadow -->
+            <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.4"/>
+        </filter>
+    </defs>
+    
+
+    
+    <g filter="url(#bevel3D)">
+        <!-- 1. G - Upper Arc (Disconnected) -->
+        <path d="M54 4 A 46 46 0 0 0 4 54 L 18 54 A 32 32 0 0 1 54 18 Z" fill="url(#gradTopLeft)"/>
+
+        <!-- 2. G - Lower Arc -->
+        <path d="M4 60 A 46 46 0 0 0 44 96 L 38 82 A 32 32 0 0 1 18 60 Z" fill="url(#gradBottomLeft)"/>
+
+        <!-- 3. G - Vertical Tail (The sharp fragment) -->
+        <path d="M30 84 L 14 100 L 32 100 L 48 84 Z" fill="url(#gradTail)"/>
+
+        <!-- 4. R - Upper Arc (Right side) -->
+        <path d="M58 4 L 58 18 A 32 32 0 0 1 82 42 L 96 42 A 46 46 0 0 0 58 4 Z" fill="url(#gradTopRight)"/>
+
+        <!-- 5. R - Leg (Diagonal) -->
+        <path d="M60 50 L 92 96 L 76 96 L 48 50 Z" fill="url(#gradLeg)"/>
+              
+        <!-- 6. Center Bar (Arrow-like) -->
+        <path d="M74 44 L 74 56 L 34 56 L 24 50 L 34 44 Z" fill="url(#gradBar)"/>
+    </g>
+</svg>

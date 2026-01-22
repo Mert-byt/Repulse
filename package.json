@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/finder.js",
+  "bin": {
+    "github-search": "bin/github-search"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "cli": "node bin/github-search",
+    "test": "node test/finder.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  }
+}

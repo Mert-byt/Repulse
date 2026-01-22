@@ -1,0 +1,77 @@
+#!/usr/bin/env node
+
+const { findRepo } = require("../src/finder");
+const readline = require("readline");
+
+const query = process.argv.slice(2).join(" ");
+
+async function searchAndDisplay(searchQuery) {
+  console.log(`\n"${searchQuery}" için aranıyor...`);
+  try {
+    const repos = await findRepo(searchQuery);
+
+    if (!repos || repos.length === 0) {
+      console.log("Bu arama için depo bulunamadı.");
+      return;
+    }
+
+    console.log("\nUygun depolar bulundu:\n");
+    repos.forEach((repo, index) => {
+      console.log(`${index + 1}. ${repo.name}`);
+      console.log(`   Açıklama: ${repo.description || "Açıklama yok"}`);
+      console.log(`   Yıldızlar: ${repo.stars} | Dil: ${repo.language || "Bilinmiyor"}`);
+      console.log(`   URL: ${repo.url}`);
+      console.log("--------------------------------------------------");
+    });
+  } catch (error) {
+    // Error is already logged in finder.js
+    console.error("Arama sırasında bir hata oluştu.");
+  }
+}
+
+async function interactiveMode() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  console.log("=== GitHub Repo Finder ===");
+  console.log("Arama yapmak için bir terim girin (çıkmak için 'exit' veya 'quit' yazın)\n");
+
+  const askQuery = () => {
+    rl.question("Arama terimi: ", async (input) => {
+      const trimmedInput = input.trim();
+      
+      if (!trimmedInput) {
+        console.log("Lütfen geçerli bir arama terimi girin.\n");
+        askQuery();
+        return;
+      }
+
+      if (trimmedInput.toLowerCase() === "exit" || trimmedInput.toLowerCase() === "quit") {
+        console.log("\nÇıkılıyor...");
+        rl.close();
+        return;
+      }
+
+      await searchAndDisplay(trimmedInput);
+      console.log("\n");
+      askQuery();
+    });
+  };
+
+  askQuery();
+}
+
+async function main() {
+  if (query) {
+    // Komut satırından arama terimi verilmişse
+    await searchAndDisplay(query);
+    process.exit(0);
+  } else {
+    // Interaktif mod
+    await interactiveMode();
+  }
+}
+
+main();
