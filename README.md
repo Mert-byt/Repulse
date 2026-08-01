@@ -1,8 +1,11 @@
+<img width="1352" height="674" alt="Screenshot_2026-08-01_23-42-56" src="https://github.com/user-attachments/assets/818481fe-01f9-4f27-bd7c-cf94323fd678" />
+
+
+
 # Repulse
 
 Smart GitHub Repository Finder — searches repositories **by functionality**, across names, descriptions, topics and README content. Read-only, web-based, and works entirely in your browser.
 
-**Live:** <https://mert-byt.github.io/Repulse>
 
 ## Features
 
