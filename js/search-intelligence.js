@@ -79,6 +79,7 @@ window.RepulseSearch = (function () {
         ['gercek zamanli', ['real time', 'realtime', 'live']],
         ['insansiz hava araci', ['drone', 'uav', 'unmanned aerial vehicle', 'quadcopter']],
         ['hava araci', ['uav', 'aerial vehicle', 'drone']],
+        ['klavye fare', ['keyboard mouse', 'kvm', 'usb hid', 'input sharing']],
     ];
 
     // ---------- Word-level map: leftover Turkish words → English terms ----------
@@ -175,6 +176,13 @@ window.RepulseSearch = (function () {
         'roket': ['rocket', 'rocketry'],
         'uzay': ['space', 'aerospace'],
         'kontrol': ['control', 'controller'],
+        'fare': ['mouse', 'cursor', 'pointer'],
+        'klavye': ['keyboard'],
+        'ekran': ['screen', 'display', 'monitor'],
+        'kamera': ['camera', 'webcam'],
+        'mikrofon': ['microphone', 'mic'],
+        'bilgisayar': ['computer', 'pc', 'desktop'],
+        'telefon': ['phone', 'mobile', 'smartphone'],
     };
 
     // Turkish possessive/plural suffixes — stripped so "kütüphanesi", "kütüphaneleri"
