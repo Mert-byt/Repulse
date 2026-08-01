@@ -21,14 +21,20 @@ const branchOptions = document.querySelectorAll('.branch-option');
 
 // ---------- Motion (framer-motion dom build) ----------
 const M = window.Motion;
-const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const REDUCED_MOTION = typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
 
 const EASE_OUT = [0.22, 1, 0.36, 1];
 const EASE_SPRING = [0.34, 1.56, 0.64, 1];
 
 function anim(target, keyframes, options = {}) {
-    if (REDUCED_MOTION) return null;
-    return M.animate(target, keyframes, options);
+    if (REDUCED_MOTION || !M) return null;
+    try {
+        return M.animate(target, keyframes, options);
+    } catch (e) {
+        return null;
+    }
 }
 
 function animateCardsIn(container) {
@@ -37,22 +43,18 @@ function animateCardsIn(container) {
 
     cards.forEach(card => card.setAttribute('data-animated', 'true'));
 
-    if (REDUCED_MOTION) {
-        cards.forEach(card => {
-            card.style.opacity = '1';
-            card.style.transform = 'none';
-        });
-        return;
-    }
+    if (REDUCED_MOTION || !M) return;
 
-    M.animate(cards, {
-        opacity: [0, 1],
-        transform: ['translateY(18px)', 'translateY(0px)']
-    }, {
-        duration: 0.45,
-        delay: (index) => index * 0.055,
-        ease: EASE_OUT
-    });
+    try {
+        M.animate(cards, {
+            opacity: [0, 1],
+            transform: ['translateY(18px)', 'translateY(0px)']
+        }, {
+            duration: 0.45,
+            delay: (index) => index * 0.055,
+            ease: EASE_OUT
+        });
+    } catch (e) { /* cards stay visible */ }
 }
 
 // ---------- Page transitions ----------
@@ -111,46 +113,48 @@ function playHeroEntrance() {
     const hint = document.querySelector('.search-hint');
     const terminal = document.querySelector('.terminal-window');
 
-    if (REDUCED_MOTION) return;
+    if (REDUCED_MOTION || !M) return;
 
-    if (badge) {
-        M.animate(badge, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
-            duration: 0.4, ease: EASE_OUT
+    try {
+        if (badge) {
+            M.animate(badge, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
+                duration: 0.4, ease: EASE_OUT
+            });
+        }
+        lines.forEach((line, i) => {
+            M.animate(line, { opacity: [0, 1], transform: ['translateY(26px)', 'translateY(0px)'] }, {
+                duration: 0.6, delay: 0.08 + i * 0.09, ease: EASE_OUT
+            });
         });
-    }
-    lines.forEach((line, i) => {
-        M.animate(line, { opacity: [0, 1], transform: ['translateY(26px)', 'translateY(0px)'] }, {
-            duration: 0.6, delay: 0.08 + i * 0.09, ease: EASE_OUT
-        });
-    });
-    if (subtitle) {
-        M.animate(subtitle, { opacity: [0, 1], transform: ['translateY(14px)', 'translateY(0px)'] }, {
-            duration: 0.5, delay: 0.45, ease: EASE_OUT
-        });
-    }
-    if (searchBox) {
-        M.animate(searchBox, { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, {
-            duration: 0.55, delay: 0.55, ease: EASE_OUT
-        });
-    }
-    if (filters) {
-        M.animate(filters, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
-            duration: 0.4, delay: 0.72, ease: EASE_OUT
-        });
-    }
-    if (hint) {
-        M.animate(hint, { opacity: [0, 1] }, { duration: 0.5, delay: 0.85, ease: 'easeOut' });
-    }
-    if (terminal) {
-        M.animate(terminal, {
-            opacity: [0, 1],
-            transform: ['translateY(24px) scale(0.985)', 'translateY(0px) scale(1)']
-        }, {
-            duration: 0.65, delay: 0.35, ease: EASE_OUT
-        });
-    }
+        if (subtitle) {
+            M.animate(subtitle, { opacity: [0, 1], transform: ['translateY(14px)', 'translateY(0px)'] }, {
+                duration: 0.5, delay: 0.45, ease: EASE_OUT
+            });
+        }
+        if (searchBox) {
+            M.animate(searchBox, { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, {
+                duration: 0.55, delay: 0.55, ease: EASE_OUT
+            });
+        }
+        if (filters) {
+            M.animate(filters, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
+                duration: 0.4, delay: 0.72, ease: EASE_OUT
+            });
+        }
+        if (hint) {
+            M.animate(hint, { opacity: [0, 1] }, { duration: 0.5, delay: 0.85, ease: 'easeOut' });
+        }
+        if (terminal) {
+            M.animate(terminal, {
+                opacity: [0, 1],
+                transform: ['translateY(24px) scale(0.985)', 'translateY(0px) scale(1)']
+            }, {
+                duration: 0.65, delay: 0.35, ease: EASE_OUT
+            });
+        }
 
-    playTerminalSequence();
+        playTerminalSequence();
+    } catch (e) { /* elements stay visible */ }
 }
 
 // Terminal typing sequence
@@ -158,6 +162,13 @@ function playTerminalSequence() {
     const cmdEl = document.getElementById('term-cmd');
     const cursor = document.querySelector('.term-cursor');
     const lineEls = [1, 2, 3, 4, 5, 6, 7].map(n => document.getElementById(`term-line-${n}`));
+
+    if (REDUCED_MOTION || !M) return;
+
+    // Hide lines only right before animating — if anything fails they stay visible
+    lineEls.forEach(line => {
+        if (line) line.style.opacity = '0';
+    });
 
     const fullText = cmdEl.textContent;
 
@@ -169,16 +180,15 @@ function playTerminalSequence() {
         if (cursor) cursor.style.display = 'none';
         lineEls.forEach((line, i) => {
             if (!line) return;
-            M.animate(line, { opacity: [0, 1], transform: ['translateX(-6px)', 'translateX(0px)'] }, {
-                duration: 0.3, delay: 0.15 + i * 0.22, ease: 'easeOut'
-            });
+            try {
+                M.animate(line, { opacity: [0, 1], transform: ['translateX(-6px)', 'translateX(0px)'] }, {
+                    duration: 0.3, delay: 0.15 + i * 0.22, ease: 'easeOut'
+                });
+            } catch (e) {
+                line.style.opacity = '1';
+            }
         });
     };
-
-    if (REDUCED_MOTION) {
-        lineEls.forEach(l => { if (l) l.style.opacity = '1'; });
-        return;
-    }
 
     const done = [];
     for (let i = 0; i <= fullText.length; i++) {
@@ -239,19 +249,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---------- GitHub API (client-side) ----------
 const GITHUB_API = 'https://api.github.com/search/repositories';
 
-// Lightweight natural language processing — strips stop words from long queries
-const STOP_WORDS = ['bir', 've', 'ile', 'için', 'bu', 'şu', 'o', 'bana', 'yapılmış', 'olan', 'göster', 'bul', 'getir', 'listele', 'istiyorum', 'the', 'and', 'for', 'with', 'made', 'in'];
-
+// Natural language query interpreter — translates Turkish/sentence queries into
+// English concept groups the GitHub search API understands (see search-intelligence.js)
 function buildSmartQuery(input) {
-    const terms = input.toLowerCase().split(/\s+/);
-
-    let cleaned = terms;
-    if (terms.length > 3) {
-        cleaned = terms.filter(t => !STOP_WORDS.includes(t) && t.length > 1);
+    if (window.RepulseSearch && input.trim().length > 2) {
+        const res = window.RepulseSearch.understandQuery(input);
+        if (res.query && res.query.trim()) return res.query;
     }
-
-    if (cleaned.length === 0) return input;
-    return cleaned.join(' ');
+    return input.trim();
 }
 
 function mapRepo(repo) {
@@ -271,29 +276,55 @@ function mapRepo(repo) {
     };
 }
 
-// Search across name/description/topics + README, then merge and deduplicate
-async function searchGitHub(query, sort, page) {
-    const smartQ = buildSmartQuery(query);
-    const base = `q=${encodeURIComponent(`${smartQ} in:name,description,topics`)}&sort=${sort}&order=desc`;
-    const mainUrl = `${GITHUB_API}?${base}&per_page=20&page=${page}`;
-    const readmeUrl = `${GITHUB_API}?q=${encodeURIComponent(`${query.trim()} in:readme`)}&sort=${sort}&order=desc&per_page=15&page=${page}`;
-
-    const [mainRes, readmeRes] = await Promise.all([fetch(mainUrl), fetch(readmeUrl)]);
-
-    if (!mainRes.ok && !readmeRes.ok) {
-        throw new Error(`GitHub API error: ${mainRes.status}`);
-    }
-
-    const [mainData, readmeData] = await Promise.all([mainRes.json(), readmeRes.json()]);
-
+// Merge two search responses, deduplicated by repo id
+function mergeResults(mainData, readmeData) {
     const map = new Map();
     (mainData.items || []).forEach(repo => map.set(repo.id, repo));
     (readmeData.items || []).forEach(repo => {
         if (!map.has(repo.id)) map.set(repo.id, repo);
     });
+    return [...map.values()].slice(0, 20).map(mapRepo);
+}
 
-    const items = [...map.values()].slice(0, 20).map(mapRepo);
-    return { items, total_count: mainData.total_count || items.length };
+async function fetchSearch(q, sort, page, perPage) {
+    const url = `${GITHUB_API}?q=${encodeURIComponent(q)}&sort=${sort}&order=desc&per_page=${perPage}&page=${page}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    return res.json();
+}
+
+// Search across name/description/topics + README, then merge and deduplicate.
+// Falls back to progressively simpler queries when a translated query finds nothing.
+async function searchGitHub(query, sort, page) {
+    const smartQ = buildSmartQuery(query);
+
+    const candidates = [];
+    if (smartQ !== query.trim()) candidates.push(smartQ);
+    candidates.push(query.trim());
+
+    const seen = new Set();
+    const queries = [];
+    for (const q of candidates) {
+        if (!seen.has(q)) {
+            seen.add(q);
+            queries.push(q);
+        }
+    }
+
+    for (const q of queries) {
+        const [mainData, readmeData] = await Promise.all([
+            fetchSearch(`${q} in:name,description,topics`, sort, page, 20),
+            fetchSearch(`${q} in:readme`, sort, page, 15)
+        ]);
+
+        const items = mergeResults(mainData, readmeData);
+        if (items.length > 0) {
+            return { items, total_count: mainData.total_count || items.length };
+        }
+    }
+
+    // Nothing found anywhere — return the last attempt so the UI can show its empty state
+    return { items: [], total_count: 0 };
 }
 
 // State for Infinite Scroll
