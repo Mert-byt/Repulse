@@ -268,18 +268,23 @@ function buildQueryPlans(input) {
 
     let primary = null;
     let precise = null;
+    let nameQ = null;
 
     if (groups.length) {
         primary = groups[0].map(quote).join(' OR ');
         const leaders = groups.map(g => g[0]).concat(plain);
         precise = leaders.map(quote).join(' ');
+        // Strongest intent signal: repos that have the core term in their NAME
+        // or topics are almost always genuinely about the topic, unlike repos
+        // whose description merely mentions it (star-heavy false positives).
+        nameQ = quote(groups[0][0]);
     } else if (plain.length) {
         primary = plain.join(' ');
     }
 
     if (!primary) primary = input.trim();
 
-    return { primary, precise, raw: input.trim() };
+    return { primary, precise, nameQ, raw: input.trim() };
 }
 
 function mapRepo(repo) {
@@ -317,37 +322,38 @@ async function fetchSearch(q, sort, page, perPage) {
 }
 
 // Search across name/description/topics + README, merged and deduplicated.
-// Precise (strict AND) results are preferred over the broad OR chain, and the
-// original input is used as a final fallback.
+// Tiers, in priority order:
+//   1. name/topics matches of the core term (strongest intent signal)
+//   2. precise strict-AND query
+//   3. broad OR chain
+//   4. raw input, only when everything else came up empty
 async function searchGitHub(query, sort, page) {
-    const { primary, precise, raw } = buildQueryPlans(query);
+    const { primary, precise, nameQ, raw } = buildQueryPlans(query);
 
-    const ordered = [];
-    if (precise && precise !== primary) ordered.push(precise);
-    ordered.push(primary);
-    if (raw !== primary && raw !== precise) ordered.push(raw);
+    const tiers = [];
+    if (nameQ && nameQ !== primary) tiers.push({ q: nameQ, qual: 'in:name,topics', readme: false });
+    if (precise && precise !== primary) tiers.push({ q: precise, qual: 'in:name,description,topics', readme: true });
+    tiers.push({ q: primary, qual: 'in:name,description,topics', readme: true });
+    if (raw !== primary && raw !== precise) tiers.push({ q: raw, qual: 'in:name,description,topics', readme: true, raw: true });
 
-    // Precise (strict AND) results merge first so they rank on top; the broad
-    // OR chain fills the rest of the list. The raw input is only tried when
-    // both translated queries came up empty.
     const merged = new Map();
     let total = 0;
-    for (let i = 0; i < ordered.length; i++) {
-        const q = ordered[i];
-        const isRaw = q === raw;
-        if (isRaw && merged.size > 0) break;
+    for (let i = 0; i < tiers.length; i++) {
+        const tier = tiers[i];
+        if (tier.raw && merged.size > 0) break;
 
-        const [mainData, readmeData] = await Promise.all([
-            fetchSearch(`${q} in:name,description,topics`, sort, page, 20),
-            fetchSearch(`${q} in:readme`, sort, page, 15)
-        ]);
-        total = total || mainData.total_count || 0;
+        const mainData = await fetchSearch(`${tier.q} ${tier.qual}`, sort, page, 20);
+        if (!tier.raw) total = mainData.total_count || total;
         (mainData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
-        (readmeData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
+
+        if (tier.readme) {
+            const readmeData = await fetchSearch(`${tier.q} in:readme`, sort, page, 15);
+            (readmeData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
+        }
     }
 
     if (merged.size > 0) {
-        return { items: [...merged.values()].slice(0, 20).map(mapRepo), total_count: total };
+        return { items: [...merged.values()].slice(0, 20).map(mapRepo), total_count: total || merged.size };
     }
 
     // Nothing found anywhere — return empty so the UI can show its empty state
