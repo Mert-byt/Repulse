@@ -249,14 +249,37 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---------- GitHub API (client-side) ----------
 const GITHUB_API = 'https://api.github.com/search/repositories';
 
-// Natural language query interpreter — translates Turkish/sentence queries into
-// English concept groups the GitHub search API understands (see search-intelligence.js)
-function buildSmartQuery(input) {
-    if (window.RepulseSearch && input.trim().length > 2) {
-        const res = window.RepulseSearch.understandQuery(input);
-        if (res.query && res.query.trim()) return res.query;
+// GitHub search notes (verified against the API):
+// - Parentheses are NOT grouping operators — they are treated as literal
+//   characters and quietly kill results.
+// - A trailing bare term after an OR chain behaves like a UNION, so
+//   "drone OR uav software" ≈ "drone OR uav OR software" (useless).
+// - Implicit AND between plain terms is precise: "drone software" → 1.1K hits.
+// Strategy: primary = first concept group as a bare OR chain; precise =
+//   strict AND of one leader term per group; raw input as final fallback.
+function buildQueryPlans(input) {
+    const res = window.RepulseSearch ? window.RepulseSearch.understandQuery(input) : null;
+    if (!res) return { primary: input.trim(), precise: null, raw: input.trim() };
+
+    const groups = res.groups.filter(g => g.length);
+    const plain = res.plain || [];
+
+    const quote = term => (/\s/.test(term) ? `"${term}"` : term);
+
+    let primary = null;
+    let precise = null;
+
+    if (groups.length) {
+        primary = groups[0].map(quote).join(' OR ');
+        const leaders = groups.map(g => g[0]).concat(plain);
+        precise = leaders.map(quote).join(' ');
+    } else if (plain.length) {
+        primary = plain.join(' ');
     }
-    return input.trim();
+
+    if (!primary) primary = input.trim();
+
+    return { primary, precise, raw: input.trim() };
 }
 
 function mapRepo(repo) {
@@ -293,37 +316,41 @@ async function fetchSearch(q, sort, page, perPage) {
     return res.json();
 }
 
-// Search across name/description/topics + README, then merge and deduplicate.
-// Falls back to progressively simpler queries when a translated query finds nothing.
+// Search across name/description/topics + README, merged and deduplicated.
+// Precise (strict AND) results are preferred over the broad OR chain, and the
+// original input is used as a final fallback.
 async function searchGitHub(query, sort, page) {
-    const smartQ = buildSmartQuery(query);
+    const { primary, precise, raw } = buildQueryPlans(query);
 
-    const candidates = [];
-    if (smartQ !== query.trim()) candidates.push(smartQ);
-    candidates.push(query.trim());
+    const ordered = [];
+    if (precise && precise !== primary) ordered.push(precise);
+    ordered.push(primary);
+    if (raw !== primary && raw !== precise) ordered.push(raw);
 
-    const seen = new Set();
-    const queries = [];
-    for (const q of candidates) {
-        if (!seen.has(q)) {
-            seen.add(q);
-            queries.push(q);
-        }
-    }
+    // Precise (strict AND) results merge first so they rank on top; the broad
+    // OR chain fills the rest of the list. The raw input is only tried when
+    // both translated queries came up empty.
+    const merged = new Map();
+    let total = 0;
+    for (let i = 0; i < ordered.length; i++) {
+        const q = ordered[i];
+        const isRaw = q === raw;
+        if (isRaw && merged.size > 0) break;
 
-    for (const q of queries) {
         const [mainData, readmeData] = await Promise.all([
             fetchSearch(`${q} in:name,description,topics`, sort, page, 20),
             fetchSearch(`${q} in:readme`, sort, page, 15)
         ]);
-
-        const items = mergeResults(mainData, readmeData);
-        if (items.length > 0) {
-            return { items, total_count: mainData.total_count || items.length };
-        }
+        total = total || mainData.total_count || 0;
+        (mainData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
+        (readmeData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
     }
 
-    // Nothing found anywhere — return the last attempt so the UI can show its empty state
+    if (merged.size > 0) {
+        return { items: [...merged.values()].slice(0, 20).map(mapRepo), total_count: total };
+    }
+
+    // Nothing found anywhere — return empty so the UI can show its empty state
     return { items: [], total_count: 0 };
 }
 

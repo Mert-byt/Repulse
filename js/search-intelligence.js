@@ -77,6 +77,8 @@ window.RepulseSearch = (function () {
         ['yapay zeka asistan', ['ai assistant', 'chatbot', 'copilot']],
         ['acik kaynak', ['open source', 'open-source', 'free software']],
         ['gercek zamanli', ['real time', 'realtime', 'live']],
+        ['insansiz hava araci', ['drone', 'uav', 'unmanned aerial vehicle', 'quadcopter']],
+        ['hava araci', ['uav', 'aerial vehicle', 'drone']],
     ];
 
     // ---------- Word-level map: leftover Turkish words → English terms ----------
@@ -168,6 +170,11 @@ window.RepulseSearch = (function () {
         'panel': ['dashboard', 'admin panel'],
         'yonetim': ['management'],
         'takip': ['tracking'],
+        'drone': ['drone', 'uav', 'quadcopter'],
+        'insansiz': ['uav', 'unmanned', 'drone'],
+        'roket': ['rocket', 'rocketry'],
+        'uzay': ['space', 'aerospace'],
+        'kontrol': ['control', 'controller'],
     };
 
     // Turkish possessive/plural suffixes — stripped so "kütüphanesi", "kütüphaneleri"
@@ -201,7 +208,8 @@ window.RepulseSearch = (function () {
         'kullanmak', 'isteyen', 'isteyene', 'kadar', 'icin uygun', 'uygun', 'harika', 'guzel',
         'istedigim', 'istedigim bir', 'benim', 'benim icin', 'ornek', 'ornekler', 'basit',
         'kolay', 'hizli', 'gelismis', 'ama', 'veya', 'fakat', 'falan', 'hem', 'de', 'da',
-        'ayrica', 'baska', 'diger', 'kendi', 'kendine',
+        'ayrica', 'baska', 'diger', 'kendi', 'kendine', 'ilgili', 'ilgilenen', 'hakkinda',
+        'birlikte', 'tarafindan', 'icin yapilmis',
     ];
 
     const FILLER_EN = [
@@ -313,7 +321,10 @@ window.RepulseSearch = (function () {
                 continue;
             }
             if (isTurkish) {
+                // Keep unknown words in the query — Turkish loanwords like
+                // "drone" or "api" are still what GitHub repos are named with.
                 unknownTurkish.push(token);
+                plain.push(token);
                 continue;
             }
             plain.push(token);
