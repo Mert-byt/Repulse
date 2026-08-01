@@ -257,9 +257,11 @@ const GITHUB_API = 'https://api.github.com/search/repositories';
 // - Implicit AND between plain terms is precise: "drone software" → 1.1K hits.
 // Strategy: primary = first concept group as a bare OR chain; precise =
 //   strict AND of one leader term per group; raw input as final fallback.
-function buildQueryPlans(input) {
-    const res = window.RepulseSearch ? window.RepulseSearch.understandQuery(input) : null;
-    if (!res) return { primary: input.trim(), precise: null, raw: input.trim() };
+function buildQueryPlans(input, res) {
+    if (!res) {
+        res = window.RepulseSearch ? window.RepulseSearch.understandQuery(input) : null;
+    }
+    if (!res) return { primary: input.trim(), precise: null, nameQ: null, raw: input.trim() };
 
     const groups = res.groups.filter(g => g.length);
     const plain = res.plain || [];
@@ -321,43 +323,93 @@ async function fetchSearch(q, sort, page, perPage) {
     return res.json();
 }
 
-// Search across name/description/topics + README, merged and deduplicated.
-// Tiers, in priority order:
-//   1. name/topics matches of the core term (strongest intent signal)
-//   2. precise strict-AND query
-//   3. broad OR chain
-//   4. raw input, only when everything else came up empty
+// Search across name/description/topics + README. The API supplies raw
+// candidates; OUR scorer decides functional relevance and ranking.
+// Dialogue rounds:
+//   1. name/topics of core term  → strongest intent signal
+//   2. precise strict-AND        → semantic combo
+//   3. broad OR chain            → recall
+//   4. README search             → only if rounds 1-3 were thin
+//   5. raw input                 → only if still nearly empty
 async function searchGitHub(query, sort, page) {
-    const { primary, precise, nameQ, raw } = buildQueryPlans(query);
+    const res = window.RepulseSearch ? window.RepulseSearch.understandQuery(query) : null;
+    const plans = res ? buildQueryPlans(query, res) : null;
+    const { primary, precise, nameQ, raw } = plans || { primary: query.trim(), precise: null, nameQ: null, raw: query.trim() };
 
     const tiers = [];
     if (nameQ && nameQ !== primary) tiers.push({ q: nameQ, qual: 'in:name,topics', readme: false });
-    if (precise && precise !== primary) tiers.push({ q: precise, qual: 'in:name,description,topics', readme: true });
+    if (precise && precise !== primary) tiers.push({ q: precise, qual: 'in:name,description,topics', readme: false });
     tiers.push({ q: primary, qual: 'in:name,description,topics', readme: true });
-    if (raw !== primary && raw !== precise) tiers.push({ q: raw, qual: 'in:name,description,topics', readme: true, raw: true });
 
-    const merged = new Map();
+    const candidates = new Map();
     let total = 0;
-    for (let i = 0; i < tiers.length; i++) {
-        const tier = tiers[i];
-        if (tier.raw && merged.size > 0) break;
 
-        const mainData = await fetchSearch(`${tier.q} ${tier.qual}`, sort, page, 20);
-        if (!tier.raw) total = mainData.total_count || total;
-        (mainData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
-
+    const runTier = async (tier) => {
+        const mainData = await fetchSearch(`${tier.q} ${tier.qual}`, sort, page, 30);
+        total = total || mainData.total_count || 0;
+        (mainData.items || []).forEach(repo => { if (!candidates.has(repo.id)) candidates.set(repo.id, repo); });
         if (tier.readme) {
             const readmeData = await fetchSearch(`${tier.q} in:readme`, sort, page, 15);
-            (readmeData.items || []).forEach(repo => { if (!merged.has(repo.id)) merged.set(repo.id, repo); });
+            (readmeData.items || []).forEach(repo => { if (!candidates.has(repo.id)) candidates.set(repo.id, repo); });
         }
+    };
+
+    // Rounds 1-3
+    for (const tier of tiers) await runTier(tier);
+
+    const scored = scoreCandidates([...candidates.values()], res, !!nameQ || (precise && precise !== primary));
+
+    // Round 4: README only when the first rounds were thin
+    if (scored.length < 8 && primary !== raw) {
+        const readmeData = await fetchSearch(`${primary} in:readme`, sort, page, 15);
+        (readmeData.items || []).forEach(repo => { if (!candidates.has(repo.id)) candidates.set(repo.id, repo); });
+        const extra = scoreCandidates([...candidates.values()], res, true);
+        scored.splice(0, scored.length, ...extra);
     }
 
-    if (merged.size > 0) {
-        return { items: [...merged.values()].slice(0, 20).map(mapRepo), total_count: total || merged.size };
+    // Round 5: raw input as last resort
+    if (scored.length < 3 && raw !== primary && raw !== precise) {
+        const rawData = await fetchSearch(`${raw} in:name,description,topics`, sort, page, 20);
+        (rawData.items || []).forEach(repo => { if (!candidates.has(repo.id)) candidates.set(repo.id, repo); });
+        const extra = scoreCandidates([...candidates.values()], res, true);
+        scored.splice(0, scored.length, ...extra);
+    }
+
+    if (scored.length > 0) {
+        return { items: scored.slice(0, 20), total_count: total || scored.length };
     }
 
     // Nothing found anywhere — return empty so the UI can show its empty state
     return { items: [], total_count: 0 };
+}
+
+// Client-side functional filter + ranking. When the query was translated
+// into concept synonyms (strict=true), repos must score on the function and
+// weak passing mentions sink below the floor. For plain queries the API has
+// already matched the exact terms, so every candidate is kept and the score
+// only orders them.
+function scoreCandidates(repos, res, strict) {
+    if (!res || !window.RepulseSearch) {
+        return repos.map(r => ({ ...r, _matchTerms: [] }));
+    }
+    const scored = repos
+        .map(repo => {
+            const { score, matched } = window.RepulseSearch.scoreRepo(repo, res);
+            return { repo, score, matched };
+        })
+        .filter(({ score }) => !strict || score > 0.02)
+        // Clear functional advantage wins; near-ties fall back to popularity.
+        .sort((a, b) => {
+            const diff = b.score - a.score;
+            if (Math.abs(diff) > 0.05) return diff;
+            return b.repo.stargazers_count - a.repo.stargazers_count;
+        })
+        .map(({ repo, matched }) => {
+            const mapped = mapRepo(repo);
+            mapped._matchTerms = matched;
+            return mapped;
+        });
+    return scored;
 }
 
 // State for Infinite Scroll
@@ -533,6 +585,14 @@ function createRepoCard(repo) {
     const topicsHtml = topics.slice(0, 3).map(topic =>
         `<span class="repo-topic">${escapeHtml(topic)}</span>`
     ).join('');
+    const matchTerms = repo._matchTerms || [];
+    const matchHtml = matchTerms.length > 0 ? `
+        <div class="repo-match">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span>Matched: ${matchTerms.map(escapeHtml).join(' · ')}</span>
+        </div>` : '';
 
     const isLiked = isRepoLiked(repo.url);
     const heartIcon = isLiked ?
@@ -549,6 +609,7 @@ function createRepoCard(repo) {
             </button>
         </div>
         <p class="repo-description">${escapeHtml(description)}</p>
+        ${matchHtml}
         ${topics.length > 0 ? `<div class="repo-topics">${topicsHtml}</div>` : ''}
         <div class="repo-stats">
             <div class="repo-stat">

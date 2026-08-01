@@ -355,5 +355,74 @@ window.RepulseSearch = (function () {
         return { query, groups, plain, isTurkish, raw, unknownTurkish };
     }
 
-    return { understandQuery, stripDiacritics, isTurkishText };
+    // ---------- Functional relevance scoring ----------
+    // The GitHub API finds raw candidates; WE decide relevance. A repo scores
+    // by how strongly the searched function appears in its name, topics and
+    // description. Name/topics hits are the strongest signal; a description
+    // counts only in proportion to how much of it is actually about the
+    // function (coverage) — passing mentions score near zero.
+    function scoreRepo(repo, res) {
+        const terms = new Set();
+        (res.groups || []).forEach(g => (g || []).forEach(t => t && terms.add(stripDiacritics(t))));
+        (res.plain || []).forEach(t => t && terms.add(stripDiacritics(t)));
+
+        if (terms.size === 0) return { score: 0, matched: [] };
+
+        const phrases = [...terms].filter(t => t.includes(' '));
+        const words = new Set([...terms].filter(t => !t.includes(' ')));
+
+        const tokenize = s => String(s || '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+
+        // Phrase match that also survives punctuation: "Operating-System"
+        // tokenizes to [operating, system] and still matches phrase "operating system".
+        const phraseIn = (tokens, phrase) => {
+            const pt = phrase.split(' ');
+            for (let i = 0; i <= tokens.length - pt.length; i++) {
+                if (pt.every((w, j) => tokens[i + j] === w)) return true;
+            }
+            return false;
+        };
+
+        // Split hits by strength: full phrase matches are stronger than a
+        // bare single word ("operating system" in a name beats a stray "os").
+        const hitsIn = (text) => {
+            const tokens = tokenize(text);
+            const phraseHits = [];
+            const wordHits = [];
+            const used = new Set();
+            phrases.forEach(p => {
+                if (!used.has(p) && phraseIn(tokens, p)) { used.add(p); phraseHits.push(p); }
+            });
+            tokens.forEach(t => {
+                if (!used.has(t) && words.has(t)) { used.add(t); wordHits.push(t); }
+            });
+            return { phraseHits, wordHits, all: [...phraseHits, ...wordHits] };
+        };
+
+        const nameHit = hitsIn(repo.full_name || repo.name || '');
+        const topicHit = hitsIn((repo.topics || []).join(' '));
+        const descText = repo.description || '';
+        const descHit = hitsIn(descText);
+
+        // Coverage: share of description tokens that relate to the function.
+        const descTokens = tokenize(descText);
+        const descMatched = new Set();
+        descTokens.forEach(t => { if (words.has(t)) descMatched.add(t); });
+        phrases.forEach(p => { if (phraseIn(descTokens, p)) descMatched.add(p); });
+        const descCoverage = descTokens.length > 0 ? descMatched.size / descTokens.length : 0;
+
+        const strength = (h, phraseW, wordW) =>
+            h.phraseHits.length > 0 ? phraseW : (h.wordHits.length > 0 ? wordW : 0);
+
+        const score = (
+            strength(nameHit, 1, 0.6) * 4 +
+            strength(topicHit, 0.8, 0.5) * 3 +
+            descCoverage
+        ) / 8;
+
+        const matched = [...new Set([...nameHit.all, ...topicHit.all, ...descHit.all])].slice(0, 4);
+        return { score, matched };
+    }
+
+    return { understandQuery, stripDiacritics, isTurkishText, scoreRepo };
 })();
