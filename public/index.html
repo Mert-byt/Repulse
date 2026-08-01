@@ -4,146 +4,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repulse - Akıllı GitHub Repository Finder</title>
+    <title>Repulse — Akıllı GitHub Repository Finder</title>
+    <meta name="description"
+        content="Repulse, GitHub repolarını isim, açıklama, konular ve README içeriğinde akıllıca arayan, güvenli ve salt-okunur bir repository finder'dır.">
+    <meta property="og:title" content="Repulse — Akıllı GitHub Repository Finder">
+    <meta property="og:description"
+        content="GitHub repolarını işlevselliğe göre akıllıca keşfedin. Güvenli, salt-okunur, web tabanlı.">
+    <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="apple-touch-icon" href="/images/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/filter.css">
 </head>
 
 <body>
-    <!-- Video Background -->
-    <div class="video-background">
-        <video id="bg-video" autoplay muted loop playsinline>
-            <source src="/videos/repo-finder-2-loop.mp4" type="video/mp4">
-        </video>
-        <div class="video-overlay"></div>
-        <canvas id="video-canvas"></canvas>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
 
-    <!-- Main Container -->
     <div class="container">
-        <header class="header">
-            <div class="logo">
-                <!-- Exact Geometric Replica of Repulse Logo -->
-                <svg class="logo-svg" width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <header class="header" id="site-header">
+            <a class="logo" href="/" aria-label="Repulse ana sayfa">
+                <svg class="logo-svg" width="44" height="44" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <!-- Fragment Gradients to match the unique shading of each piece -->
-                        <!-- 1. G-Arc Top (Darkest) -->
                         <linearGradient id="gradTopLeft" x1="100%" y1="100%" x2="0%" y2="0%">
                             <stop offset="0%" stop-color="#3d3d3d" />
                             <stop offset="100%" stop-color="#2a2a2a" />
                         </linearGradient>
-
-                        <!-- 2. G-Arc Bottom (Medium-Dark) -->
                         <linearGradient id="gradBottomLeft" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stop-color="#4a4a4a" />
                             <stop offset="100%" stop-color="#353535" />
                         </linearGradient>
-
-                        <!-- 3. R-Arc Top (Lightest) -->
                         <linearGradient id="gradTopRight" x1="0%" y1="100%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#656565" />
-                            <stop offset="100%" stop-color="#505050" />
+                            <stop offset="0%" stop-color="#f0f0f0" />
+                            <stop offset="100%" stop-color="#c8c8c8" />
                         </linearGradient>
-
-                        <!-- 4. R-Leg (Medium) -->
                         <linearGradient id="gradLeg" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#555555" />
-                            <stop offset="100%" stop-color="#404040" />
+                            <stop offset="0%" stop-color="#9a9a9a" />
+                            <stop offset="100%" stop-color="#6a6a6a" />
                         </linearGradient>
-
-                        <!-- 5. Center Bar (Dark with metallic shine) -->
                         <linearGradient id="gradBar" x1="0%" y1="50%" x2="100%" y2="50%">
-                            <stop offset="0%" stop-color="#404040" />
-                            <stop offset="50%" stop-color="#5a5a5a" />
-                            <stop offset="100%" stop-color="#303030" />
+                            <stop offset="0%" stop-color="#5c5c5c" />
+                            <stop offset="50%" stop-color="#8a8a8a" />
+                            <stop offset="100%" stop-color="#484848" />
                         </linearGradient>
-
-                        <!-- 6. Tail (Dark) -->
                         <linearGradient id="gradTail" x1="50%" y1="0%" x2="50%" y2="100%">
-                            <stop offset="0%" stop-color="#454545" />
+                            <stop offset="0%" stop-color="#555555" />
                             <stop offset="100%" stop-color="#2b2b2b" />
                         </linearGradient>
-
-                        <!-- Metallic Bevel Effect -->
-                        <filter id="bevel3D" x="-50%" y="-50%" width="200%" height="200%">
-                            <!-- Cutout/Bevel depth -->
-                            <feGaussianBlur in="SourceAlpha" stdDeviation="0.4" result="blur" />
-                            <feSpecularLighting in="blur" surfaceScale="2" specularConstant="1.5" specularExponent="35"
-                                lighting-color="#ffffff" result="spec">
-                                <fePointLight x="-5000" y="-10000" z="5000" />
-                            </feSpecularLighting>
-                            <feComposite in="spec" in2="SourceAlpha" operator="in" result="spec" />
-                            <feComposite in="SourceGraphic" in2="spec" operator="arithmetic" k1="0" k2="1" k3="1"
-                                k4="0" />
-                            <!-- Subtle drop shadow -->
-                            <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.4" />
-                        </filter>
                     </defs>
-
-                    <g filter="url(#bevel3D)">
-                        <!-- 1. G - Upper Arc (Disconnected) -->
-                        <!-- Starts at top, arcs left, ends before middle line -->
-                        <path d="M54 4 
-                                 A 46 46 0 0 0 4 54 
-                                 L 18 54 
-                                 A 32 32 0 0 1 54 18 
-                                 Z" fill="url(#gradTopLeft)" />
-
-                        <!-- 2. G - Lower Arc -->
-                        <!-- Starts below middle line, arcs to bottom, stops at cut -->
-                        <path d="M4 60 
-                                 A 46 46 0 0 0 44 96 
-                                 L 38 82 
-                                 A 32 32 0 0 1 18 60 
-                                 Z" fill="url(#gradBottomLeft)" />
-
-                        <!-- 3. G - Vertical Tail (The sharp fragment) -->
-                        <path d="M30 84 
-                                 L 14 100 
-                                 L 32 100 
-                                 L 48 84 
-                                 Z" fill="url(#gradTail)" />
-
-                        <!-- 4. R - Upper Arc (Right side) -->
-                        <path d="M58 4 
-                                 L 58 18 
-                                 A 32 32 0 0 1 82 42 
-                                 L 96 42 
-                                 A 46 46 0 0 0 58 4 
-                                 Z" fill="url(#gradTopRight)" />
-
-                        <!-- 5. R - Leg (Diagonal) -->
-                        <path d="M60 50 
-                                 L 92 96 
-                                 L 76 96 
-                                 L 48 50 
-                                 Z" fill="url(#gradLeg)" />
-
-                        <!-- 6. Center Bar (Arrow-like) -->
-                        <path d="M74 44 
-                                 L 74 56 
-                                 L 34 56 
-                                 L 24 50 
-                                 L 34 44 
-                                 Z" fill="url(#gradBar)" />
+                    <g>
+                        <path d="M54 4 A 46 46 0 0 0 4 54 L 18 54 A 32 32 0 0 1 54 18 Z" fill="url(#gradTopLeft)" />
+                        <path d="M4 60 A 46 46 0 0 0 44 96 L 38 82 A 32 32 0 0 1 18 60 Z" fill="url(#gradBottomLeft)" />
+                        <path d="M30 84 L 14 100 L 32 100 L 48 84 Z" fill="url(#gradTail)" />
+                        <path d="M58 4 L 58 18 A 32 32 0 0 1 82 42 L 96 42 A 46 46 0 0 0 58 4 Z"
+                            fill="url(#gradTopRight)" />
+                        <path d="M60 50 L 92 96 L 76 96 L 48 50 Z" fill="url(#gradLeg)" />
+                        <path d="M74 44 L 74 56 L 34 56 L 24 50 L 34 44 Z" fill="url(#gradBar)" />
                     </g>
                 </svg>
                 <span class="logo-text">Repulse</span>
-            </div>
-            <nav class="nav">
+            </a>
+            <nav class="nav" aria-label="Ana gezinme">
                 <button class="nav-btn active" data-page="search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                        <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
                     <span>Arama</span>
                 </button>
                 <button class="nav-btn" data-page="security">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
                     <span>Güvenlik</span>
                 </button>
                 <button class="nav-btn" data-page="favorites">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
+                            stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                    </svg>
                     <span>Beğenilenler</span>
                 </button>
             </nav>
@@ -152,11 +97,10 @@
         <!-- Search Page -->
         <div class="page active" id="search-page">
             <div class="hero-section">
-                <!-- Split Layout: Left Content, Right 3D -->
                 <div class="hero-split">
-                    <!-- Left: Text Content -->
                     <div class="hero-content">
                         <div class="hero-badge">
+                            <span class="badge-dot"></span>
                             <span>Akıllı Arama</span>
                         </div>
                         <h1 class="main-title">
@@ -164,174 +108,121 @@
                             <span class="title-line">Repository</span>
                             <span class="title-line highlight">Finder</span>
                         </h1>
+                        <p class="subtitle">
+                            İsme, açıklamaya, konulara ve README içeriğine göre arama yapın.
+                            İşlevsellik bazlı sonuçlarla tam ihtiyacınız olan repoyu bulun.
+                        </p>
 
                         <div class="search-container">
                             <div class="search-box">
-                                <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                    aria-hidden="true">
                                     <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
                                     <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
                                         stroke-linecap="round" />
                                 </svg>
-                                <input type="text" id="search-input" placeholder="Arama yapın..." autocomplete="off" />
-                                <button id="search-btn" class="search-button">
+                                <input type="text" id="search-input" placeholder="Arama yapın..."
+                                    aria-label="Arama yapın" autocomplete="off" />
+                                <button id="search-btn" class="search-button" aria-label="Ara">
                                     <span>Ara</span>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                 </button>
                             </div>
 
-                            <!-- Search Filters -->
-                            <!-- Search Filters (n8n Style) -->
                             <div class="search-filters-container">
                                 <div class="filter-wrapper" id="filter-wrapper">
-                                    <button class="filter-main-btn" id="filter-main-btn">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="filter-icon">
+                                    <button class="filter-main-btn" id="filter-main-btn"
+                                        aria-expanded="false" aria-haspopup="true">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                            class="filter-icon" aria-hidden="true">
                                             <path d="M3 6h18M6 12h12M10 18h8" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" />
                                         </svg>
                                         <span>Sıralama</span>
+                                        <svg class="filter-chevron" width="14" height="14" viewBox="0 0 24 24"
+                                            fill="none" aria-hidden="true">
+                                            <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
                                     </button>
 
-                                    <!-- Filter Options (Hidden by default) -->
                                     <div class="filter-branches" id="filter-branches">
-                                        <!-- Top Branch: Updated Date -->
                                         <button class="branch-option option-top" data-sort="updated">
-                                            <div class="branch-connector"></div>
                                             <span class="branch-label">Tarih</span>
                                         </button>
-
-                                        <!-- Middle Branch: Stars -->
-                                        <button class="branch-option option-middle" data-sort="stars">
-                                            <div class="branch-connector"></div>
+                                        <button class="branch-option option-middle active" data-sort="stars">
                                             <span class="branch-label">Yıldız</span>
                                         </button>
-
-                                        <!-- Bottom Branch: Forks (Fishing rod style?) -->
                                         <button class="branch-option option-bottom" data-sort="forks">
-                                            <div class="branch-connector"></div>
                                             <span class="branch-label">Forklar</span>
                                         </button>
                                     </div>
                                     <input type="hidden" id="sort-select" value="stars">
-                                    <!-- Hidden input for compatibility -->
                                 </div>
                             </div>
 
                             <p class="search-hint">
-                                💡 İpucu: Tam cümleler yazabilirsiniz. Sistem işlevsellik ve açıklamalarda da arama
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                    <path d="M12 16v-5M12 8h.01" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" />
+                                </svg>
+                                İpucu: Tam cümleler yazabilirsiniz. Sistem işlevsellik ve açıklamalarda da arama
                                 yapar.
                             </p>
                         </div>
                     </div>
 
-                    <!-- Right: Animated Tree -->
-                    <div class="hero-3d">
-                        <div class="tree-container">
-                            <!-- Exact SVG Replica of autumn-tree-ref.jpg -->
-                            <svg class="autumn-tree-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-                                <!-- Grass Base -->
-                                <ellipse cx="250" cy="480" rx="150" ry="25" fill="#8BC34A" />
-                                <ellipse cx="250" cy="485" rx="120" ry="18" fill="#7CB342" />
-                                <ellipse cx="200" cy="478" rx="40" ry="8" fill="#9CCC65" />
-                                <ellipse cx="300" cy="482" rx="30" ry="6" fill="#AED581" />
-
-                                <!-- Main Trunk - Thick and gnarly like reference -->
-                                <path
-                                    d="M230 480 Q210 420 215 360 Q220 320 225 290 Q230 270 240 255 L260 255 Q270 270 275 290 Q280 320 285 360 Q290 420 270 480 Z"
-                                    fill="#5D4037" />
-                                <!-- Trunk bark texture/shadow -->
-                                <path
-                                    d="M235 480 Q220 430 225 370 Q228 330 233 300 L238 300 Q232 330 230 370 Q225 430 240 480 Z"
-                                    fill="#4E342E" />
-                                <path
-                                    d="M255 480 Q265 430 262 370 Q260 330 258 300 L262 300 Q265 330 267 370 Q270 430 260 480 Z"
-                                    fill="#3E2723" />
-
-                                <!-- Trunk knot/hole detail -->
-                                <ellipse cx="250" cy="400" rx="12" ry="18" fill="#3E2723" />
-                                <ellipse cx="250" cy="398" rx="8" ry="12" fill="#2d1f1a" />
-
-                                <!-- Main Branches - Visible through foliage -->
-                                <path d="M240 290 Q180 250 120 280" stroke="#5D4037" stroke-width="18" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M260 290 Q320 250 380 280" stroke="#5D4037" stroke-width="18" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M235 270 Q160 200 100 180" stroke="#5D4037" stroke-width="14" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M265 270 Q340 200 400 180" stroke="#5D4037" stroke-width="14" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M250 260 Q250 180 250 100" stroke="#5D4037" stroke-width="12" fill="none"
-                                    stroke-linecap="round" />
-                                <!-- Secondary branches -->
-                                <path d="M250 200 Q200 150 140 120" stroke="#6D4C41" stroke-width="8" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M250 200 Q300 150 360 120" stroke="#6D4C41" stroke-width="8" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M180 260 Q140 220 90 230" stroke="#6D4C41" stroke-width="6" fill="none"
-                                    stroke-linecap="round" />
-                                <path d="M320 260 Q360 220 410 230" stroke="#6D4C41" stroke-width="6" fill="none"
-                                    stroke-linecap="round" />
-
-                                <!-- FOLIAGE - Cloud-like clusters matching reference colors -->
-                                <!-- Bottom Layer (Deep Orange/Red) -->
-                                <ellipse cx="80" cy="280" rx="55" ry="45" fill="#E65100" />
-                                <ellipse cx="420" cy="280" rx="55" ry="45" fill="#D84315" />
-                                <ellipse cx="140" cy="300" rx="60" ry="50" fill="#FF5722" />
-                                <ellipse cx="360" cy="300" rx="60" ry="50" fill="#FF6F00" />
-
-                                <!-- Second Layer -->
-                                <ellipse cx="60" cy="230" rx="50" ry="40" fill="#FF6F00" />
-                                <ellipse cx="440" cy="230" rx="50" ry="40" fill="#E65100" />
-                                <ellipse cx="120" cy="250" rx="55" ry="45" fill="#FF8F00" />
-                                <ellipse cx="380" cy="250" rx="55" ry="45" fill="#FF5722" />
-                                <ellipse cx="200" cy="270" rx="50" ry="40" fill="#E65100" />
-                                <ellipse cx="300" cy="270" rx="50" ry="40" fill="#FF6F00" />
-
-                                <!-- Middle Layer (Orange/Yellow) -->
-                                <ellipse cx="100" cy="190" rx="50" ry="40" fill="#FF8F00" />
-                                <ellipse cx="400" cy="190" rx="50" ry="40" fill="#FF6F00" />
-                                <ellipse cx="170" cy="210" rx="55" ry="45" fill="#FFA000" />
-                                <ellipse cx="330" cy="210" rx="55" ry="45" fill="#FF8F00" />
-                                <ellipse cx="250" cy="230" rx="65" ry="50" fill="#FFB300" />
-
-                                <!-- Upper Layer -->
-                                <ellipse cx="80" cy="150" rx="45" ry="35" fill="#E65100" />
-                                <ellipse cx="420" cy="150" rx="45" ry="35" fill="#FF5722" />
-                                <ellipse cx="150" cy="160" rx="55" ry="45" fill="#FF6F00" />
-                                <ellipse cx="350" cy="160" rx="55" ry="45" fill="#FFA000" />
-                                <ellipse cx="250" cy="170" rx="60" ry="50" fill="#FFCA28" />
-
-                                <!-- Top Layer (Yellow/Gold highlights) -->
-                                <ellipse cx="120" cy="120" rx="45" ry="35" fill="#FF8F00" />
-                                <ellipse cx="380" cy="120" rx="45" ry="35" fill="#FF6F00" />
-                                <ellipse cx="200" cy="110" rx="50" ry="40" fill="#FFB300" />
-                                <ellipse cx="300" cy="110" rx="50" ry="40" fill="#FFA000" />
-                                <ellipse cx="250" cy="100" rx="55" ry="45" fill="#FFCA28" />
-
-                                <!-- Crown Top -->
-                                <ellipse cx="180" cy="80" rx="40" ry="32" fill="#FF8F00" />
-                                <ellipse cx="320" cy="80" rx="40" ry="32" fill="#FF6F00" />
-                                <ellipse cx="250" cy="65" rx="50" ry="40" fill="#FFB300" />
-                                <ellipse cx="220" cy="50" rx="35" ry="28" fill="#FFCA28" />
-                                <ellipse cx="280" cy="55" rx="35" ry="28" fill="#FFD54F" />
-                                <ellipse cx="250" cy="35" rx="40" ry="30" fill="#FFE082" />
-
-                                <!-- Bright yellow center highlights -->
-                                <ellipse cx="250" cy="180" rx="35" ry="28" fill="#FFD54F" />
-                                <ellipse cx="200" cy="200" rx="30" ry="25" fill="#FFEB3B" />
-                                <ellipse cx="300" cy="160" rx="25" ry="20" fill="#FFF59D" />
-                            </svg>
+                    <!-- Right: Terminal Visual -->
+                    <div class="hero-terminal" aria-hidden="true">
+                        <div class="terminal-window">
+                            <div class="terminal-bar">
+                                <span class="term-dot"></span>
+                                <span class="term-dot"></span>
+                                <span class="term-dot"></span>
+                                <span class="term-title">repulse — zsh</span>
+                            </div>
+                            <div class="terminal-body">
+                                <div class="term-line">
+                                    <span class="term-prompt">$</span>
+                                    <span class="term-cmd" id="term-cmd">repulse find "machine learning"</span>
+                                    <span class="term-cursor"></span>
+                                </div>
+                                <div class="term-line dim" id="term-line-1"><span
+                                        class="term-prompt">→</span><span class="term-text">isim, açıklama, konular,
+                                        README taranıyor…</span></div>
+                                <div class="term-line dim" id="term-line-2"><span
+                                        class="term-prompt">→</span><span class="term-text">3 kaynak birleştiriliyor…
+                                        repo bulundu</span></div>
+                                <div class="term-line ok" id="term-line-3"><span
+                                        class="term-prompt">✓</span><span class="term-text">128 repo bulundu</span>
+                                </div>
+                                <div class="term-line ok" id="term-line-4"><span
+                                        class="term-prompt">✓</span><span class="term-text">transformers — 98K ★</span>
+                                </div>
+                                <div class="term-line ok" id="term-line-5"><span
+                                        class="term-prompt">✓</span><span class="term-text">pytorch — 82K ★</span>
+                                </div>
+                                <div class="term-line ok" id="term-line-6"><span
+                                        class="term-prompt">✓</span><span class="term-text">scikit-learn — 62K ★</span>
+                                </div>
+                                <div class="term-line ok" id="term-line-7"><span class="term-prompt">✓</span><span
+                                        class="term-text">sonuçlar hazır — sıralama: yıldız</span></div>
+                            </div>
                         </div>
+                        <div class="terminal-caption">Salt-okunur · Web tabanlı · Sadece bilgi</div>
                     </div>
                 </div>
             </div>
 
             <!-- Recommendations Section -->
-            <div class="results-section" id="recommendations-section" style="display: none; margin-top: 3rem;">
+            <div class="results-section" id="recommendations-section" style="display: none;">
                 <div class="results-header">
-                    <h2 class="results-title" style="font-size: 1.5rem;">Önerilen Repolar</h2>
+                    <h2 class="results-title">Önerilen Repolar</h2>
+                    <span class="results-sub">Beğenilerinize göre</span>
                 </div>
                 <div class="results-container" id="recommendations-container"></div>
             </div>
@@ -354,9 +245,9 @@
                 <div class="security-grid">
                     <div class="security-card">
                         <div class="card-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                         <h3>Tamamen Güvenli</h3>
@@ -366,13 +257,13 @@
 
                     <div class="security-card">
                         <div class="card-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2"
+                            <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5"
                                     stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
+                                <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                         <h3>Sadece Okuma</h3>
@@ -382,10 +273,10 @@
 
                     <div class="security-card">
                         <div class="card-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                            <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor"
-                                    stroke-width="2" />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2"
+                                    stroke-width="1.5" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5"
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
@@ -396,17 +287,9 @@
 
                     <div class="security-card">
                         <div class="card-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                                <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M12 21c0-1-1-3-3-3s-3 2-3 3 1 3 3 3 3-2 3-3" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M12 3c0 1-1 3-3 3S6 4 6 3s1-3 3-3 3 2 3 3" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+                                <path d="M6 20h12M6 4h12M4 8l8 4 8-4M4 12v8M20 12v8" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                         <h3>API Güvenliği</h3>
@@ -419,7 +302,7 @@
                     <h3>Nasıl Çalışır?</h3>
                     <div class="info-steps">
                         <div class="step">
-                            <div class="step-number">1</div>
+                            <div class="step-number">01</div>
                             <div class="step-content">
                                 <h4>Akıllı Arama İsteği</h4>
                                 <p>Arama teriminiz GitHub API'sine gönderilir. Sistem isim, açıklama, konular ve README
@@ -427,17 +310,15 @@
                             </div>
                         </div>
                         <div class="step">
-                            <div class="step-number">2</div>
+                            <div class="step-number">02</div>
                             <div class="step-content">
                                 <h4>Çoklu Dil Desteği</h4>
                                 <p>Türkçe, İngilizce veya başka dillerde arama yapabilirsiniz. Sistem tüm dillerdeki
                                     repoları bulur.</p>
                             </div>
                         </div>
-
-
                         <div class="step">
-                            <div class="step-number">3</div>
+                            <div class="step-number">03</div>
                             <div class="step-content">
                                 <h4>Görüntüleme</h4>
                                 <p>Sonuçlar ekranda gösterilir, hiçbir şey indirilmez. İşlevsellik bazlı arama ile daha
@@ -457,32 +338,28 @@
         <!-- Favorites Page -->
         <div class="page" id="favorites-page">
             <div class="favorites-content">
-                <h2 class="section-title" style="text-align: center; margin-bottom: 1rem;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                        style="vertical-align: middle; margin-right: 0.5rem; color: var(--bright-green);">
-                        <path
-                            d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
-                            fill="currentColor" />
+                <h2 class="section-title">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
+                            stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
                     </svg>
                     Beğenilenler
                 </h2>
-                <div class="results-count" id="favorites-count"
-                    style="text-align: center; margin-bottom: 2rem; color: var(--text-muted);"></div>
+                <div class="results-count" id="favorites-count"></div>
                 <div class="results-container" id="favorites-container"></div>
             </div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
         <div class="loader">
             <div class="loader-ring"></div>
-            <div class="loader-ring"></div>
-            <div class="loader-ring"></div>
         </div>
-        <p class="loading-text">Aranıyor...</p>
+        <p class="loading-text">Aranıyor…</p>
     </div>
 
+    <script src="/js/vendor/motion.min.js"></script>
     <script src="/js/main.js"></script>
 </body>
 

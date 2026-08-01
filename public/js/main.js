@@ -1,4 +1,4 @@
-// Main JavaScript
+// Main JavaScript — Repulse
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 const sortSelect = document.getElementById('sort-select');
@@ -12,18 +12,195 @@ const favoritesCount = document.getElementById('favorites-count');
 const loadingOverlay = document.getElementById('loading-overlay');
 const navButtons = document.querySelectorAll('.nav-btn');
 const pages = document.querySelectorAll('.page');
+const header = document.getElementById('site-header');
 
 // Filter UI Elements
 const filterWrapper = document.getElementById('filter-wrapper');
 const filterMainBtn = document.getElementById('filter-main-btn');
 const branchOptions = document.querySelectorAll('.branch-option');
 
-// Toggle Filter Menu
+// ---------- Motion (framer-motion dom build) ----------
+const M = window.Motion;
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const EASE_OUT = [0.22, 1, 0.36, 1];
+const EASE_SPRING = [0.34, 1.56, 0.64, 1];
+
+function anim(target, keyframes, options = {}) {
+    if (REDUCED_MOTION) {
+        if (target instanceof Element || target instanceof NodeList) {
+            return null;
+        }
+        return null;
+    }
+    return M.animate(target, keyframes, options);
+}
+
+function animateCardsIn(container) {
+    const cards = container.querySelectorAll('.repo-card:not([data-animated])');
+    if (cards.length === 0) return;
+
+    cards.forEach(card => card.setAttribute('data-animated', 'true'));
+
+    if (REDUCED_MOTION) {
+        cards.forEach(card => {
+            card.style.opacity = '1';
+            card.style.transform = 'none';
+        });
+        return;
+    }
+
+    M.animate(cards, {
+        opacity: [0, 1],
+        transform: ['translateY(18px)', 'translateY(0px)']
+    }, {
+        duration: 0.45,
+        delay: (index) => index * 0.055,
+        ease: EASE_OUT
+    });
+}
+
+// ---------- Page transitions ----------
+function switchPage(targetPage) {
+    navButtons.forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`.nav-btn[data-page="${targetPage}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const current = document.querySelector('.page.active');
+    const next = document.getElementById(`${targetPage}-page`);
+    if (!next || next === current) return;
+
+    if (current) {
+        anim(current, { opacity: [1, 0], transform: ['translateY(0px)', 'translateY(-8px)'] }, {
+            duration: 0.16,
+            ease: 'easeOut'
+        });
+    }
+
+    setTimeout(() => {
+        if (current) current.classList.remove('active');
+        next.classList.add('active');
+        anim(next, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
+            duration: 0.32,
+            delay: (REDUCED_MOTION ? 0 : 0.02),
+            ease: EASE_OUT
+        });
+
+        if (targetPage === 'favorites') loadFavorites();
+    }, REDUCED_MOTION ? 0 : 170);
+}
+
+// Navigation
+navButtons.forEach(btn => {
+    btn.addEventListener('click', () => switchPage(btn.dataset.page));
+});
+
+// Header scroll state
+let headerTick = false;
+window.addEventListener('scroll', () => {
+    if (headerTick) return;
+    headerTick = true;
+    requestAnimationFrame(() => {
+        header.classList.toggle('scrolled', window.scrollY > 24);
+        headerTick = false;
+    });
+}, { passive: true });
+
+// ---------- Hero entrance ----------
+function playHeroEntrance() {
+    const lines = document.querySelectorAll('.title-line');
+    const badge = document.querySelector('.hero-badge');
+    const subtitle = document.querySelector('.subtitle');
+    const searchBox = document.querySelector('.search-box');
+    const filters = document.querySelector('.search-filters-container');
+    const hint = document.querySelector('.search-hint');
+    const terminal = document.querySelector('.terminal-window');
+
+    if (REDUCED_MOTION) return;
+
+    if (badge) {
+        M.animate(badge, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
+            duration: 0.4, ease: EASE_OUT
+        });
+    }
+    lines.forEach((line, i) => {
+        M.animate(line, { opacity: [0, 1], transform: ['translateY(26px)', 'translateY(0px)'] }, {
+            duration: 0.6, delay: 0.08 + i * 0.09, ease: EASE_OUT
+        });
+    });
+    if (subtitle) {
+        M.animate(subtitle, { opacity: [0, 1], transform: ['translateY(14px)', 'translateY(0px)'] }, {
+            duration: 0.5, delay: 0.45, ease: EASE_OUT
+        });
+    }
+    if (searchBox) {
+        M.animate(searchBox, { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, {
+            duration: 0.55, delay: 0.55, ease: EASE_OUT
+        });
+    }
+    if (filters) {
+        M.animate(filters, { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0px)'] }, {
+            duration: 0.4, delay: 0.72, ease: EASE_OUT
+        });
+    }
+    if (hint) {
+        M.animate(hint, { opacity: [0, 1] }, { duration: 0.5, delay: 0.85, ease: 'easeOut' });
+    }
+    if (terminal) {
+        M.animate(terminal, {
+            opacity: [0, 1],
+            transform: ['translateY(24px) scale(0.985)', 'translateY(0px) scale(1)']
+        }, {
+            duration: 0.65, delay: 0.35, ease: EASE_OUT
+        });
+    }
+
+    playTerminalSequence();
+}
+
+// Terminal typing sequence
+function playTerminalSequence() {
+    const cmdEl = document.getElementById('term-cmd');
+    const cursor = document.querySelector('.term-cursor');
+    const lineEls = [1, 2, 3, 4, 5, 6, 7].map(n => document.getElementById(`term-line-${n}`));
+
+    const fullText = cmdEl.textContent;
+    let done = [];
+
+    const typeChar = (charIndex) => {
+        cmdEl.textContent = fullText.slice(0, charIndex + 1);
+    };
+
+    const startLines = () => {
+        if (cursor) cursor.style.display = 'none';
+        lineEls.forEach((line, i) => {
+            if (!line) return;
+            M.animate(line, { opacity: [0, 1], transform: ['translateX(-6px)', 'translateX(0px)'] }, {
+                duration: 0.3, delay: 0.15 + i * 0.22, ease: 'easeOut'
+            });
+        });
+    };
+
+    if (REDUCED_MOTION) {
+        lineEls.forEach(l => { if (l) l.style.opacity = '1'; });
+        return;
+    }
+
+    for (let i = 0; i <= fullText.length; i++) {
+        done.push(new Promise(resolve => setTimeout(() => { typeChar(i); resolve(); }, 30 + i * 22)));
+    }
+
+    Promise.all(done).then(() => setTimeout(startLines, 200));
+}
+
+// ---------- Toggle Filter Menu ----------
 if (filterMainBtn) {
     filterMainBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        const opening = !filterWrapper.classList.contains('open');
         filterWrapper.classList.toggle('open');
         filterMainBtn.classList.toggle('active');
+        filterMainBtn.setAttribute('aria-expanded', opening ? 'true' : 'false');
     });
 }
 
@@ -32,6 +209,7 @@ document.addEventListener('click', (e) => {
     if (filterWrapper && !filterWrapper.contains(e.target)) {
         filterWrapper.classList.remove('open');
         if (filterMainBtn) filterMainBtn.classList.remove('active');
+        if (filterMainBtn) filterMainBtn.setAttribute('aria-expanded', 'false');
     }
 });
 
@@ -40,60 +218,34 @@ branchOptions.forEach(option => {
     option.addEventListener('click', () => {
         const sortValue = option.getAttribute('data-sort');
 
-        // Update UI
         branchOptions.forEach(btn => btn.classList.remove('active'));
         option.classList.add('active');
 
-        // Update hidden input
         if (sortSelect) {
             sortSelect.value = sortValue;
-            // Trigger search manually since hidden input change event might not fire
             const query = searchInput.value.trim();
             if (query) {
                 performSearch(query);
             }
         }
 
-        // Close menu
         filterWrapper.classList.remove('open');
         if (filterMainBtn) filterMainBtn.classList.remove('active');
-    });
-});
-
-// Navigation
-navButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const targetPage = btn.dataset.page;
-
-        // Update active nav button
-        navButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        // Show target page
-        pages.forEach(page => {
-            page.classList.remove('active');
-            if (page.id === `${targetPage}-page`) {
-                page.classList.add('active');
-            }
-        });
-
-        // Load specific page data
-        if (targetPage === 'favorites') {
-            loadFavorites();
-        }
+        if (filterMainBtn) filterMainBtn.setAttribute('aria-expanded', 'false');
     });
 });
 
 // Initial load
 document.addEventListener('DOMContentLoaded', () => {
     loadRecommendations();
+    playHeroEntrance();
 });
 
 // State for Infinite Scroll
 let currentPage = 1;
 let currentQuery = '';
 let isLoadingMore = false;
-let isDiscoverMode = true; // Default to discover mode
+let isDiscoverMode = true;
 const DISCOVER_TOPICS = ['javascript', 'python', 'react', 'ai', 'machine-learning', 'web', 'rust', 'go', 'threejs'];
 
 // Search functionality
@@ -114,12 +266,11 @@ async function performSearch(query, isNewSearch = true) {
         currentPage = 1;
         resultsSection.classList.add('active');
     } else {
-        // Pagination: Append loading indicator
         isLoadingMore = true;
         const loader = document.createElement('div');
         loader.id = 'scroll-loading';
         loader.textContent = 'Daha fazla yükleniyor...';
-        loader.style.cssText = 'text-align:center;padding:1rem;grid-column:1/-1;color:var(--text-muted);';
+        loader.style.cssText = 'text-align:center;padding:1.2rem;grid-column:1/-1;color:var(--text-3);font-family:var(--font-mono);font-size:0.85rem;';
         resultsContainer.appendChild(loader);
     }
 
@@ -129,7 +280,6 @@ async function performSearch(query, isNewSearch = true) {
         const response = await fetch(url);
         const data = await response.json();
 
-        // Remove loader if paginating
         const existingLoader = document.getElementById('scroll-loading');
         if (existingLoader) existingLoader.remove();
 
@@ -138,19 +288,21 @@ async function performSearch(query, isNewSearch = true) {
         if (data.items && data.items.length > 0) {
             if (isNewSearch && resultsCount) {
                 resultsCount.textContent = `${formatNumber(data.total_count || data.items.length)} sonuç bulundu`;
+                anim(resultsCount, { opacity: [0, 1], transform: ['scale(0.96)', 'scale(1)'] }, {
+                    duration: 0.3, ease: EASE_SPRING
+                });
             }
 
             data.items.forEach(repo => {
-                const card = createRepoCard(repo);
-                resultsContainer.appendChild(card);
+                resultsContainer.appendChild(createRepoCard(repo));
             });
 
+            animateCardsIn(resultsContainer);
             isLoadingMore = false;
         } else if (isNewSearch) {
             showNoResults();
         } else {
-            // No more results
-            isLoadingMore = true; // Stop trying
+            isLoadingMore = true;
         }
     } catch (error) {
         console.error('Search error:', error);
@@ -164,7 +316,7 @@ async function performSearch(query, isNewSearch = true) {
     }
 }
 
-// Infinite Scroll - Discover Mode (Random Repos)
+// Infinite Scroll - Discover Mode
 async function loadRandomDiscoverRepos() {
     if (isLoadingMore) return;
     isLoadingMore = true;
@@ -179,8 +331,8 @@ async function loadRandomDiscoverRepos() {
 
     const loader = document.createElement('div');
     loader.id = 'scroll-loading';
-    loader.innerHTML = '<span style="color:var(--bright-green)">Keşfediliyor...</span>';
-    loader.style.cssText = 'text-align:center;padding:1rem;grid-column:1/-1;';
+    loader.innerHTML = '<span>Keşfediliyor...</span>';
+    loader.style.cssText = 'text-align:center;padding:1.2rem;grid-column:1/-1;color:var(--text-3);font-family:var(--font-mono);font-size:0.85rem;';
     resultsContainer.appendChild(loader);
 
     try {
@@ -192,9 +344,9 @@ async function loadRandomDiscoverRepos() {
 
         if (data.items && data.items.length > 0) {
             data.items.forEach(repo => {
-                const card = createRepoCard(repo);
-                resultsContainer.appendChild(card);
+                resultsContainer.appendChild(createRepoCard(repo));
             });
+            animateCardsIn(resultsContainer);
         }
 
         isLoadingMore = false;
@@ -206,20 +358,16 @@ async function loadRandomDiscoverRepos() {
     }
 }
 
-// Scroll Event for Infinite Loading (Throttled)
-// Scroll Event for Infinite Loading (Optimized)
+// Scroll Event for Infinite Loading
 let isScrollScheduled = false;
 
 window.addEventListener('scroll', () => {
     if (isScrollScheduled) return;
-
     isScrollScheduled = true;
 
-    // Use requestAnimationFrame to run logic in sync with reflow
     window.requestAnimationFrame(() => {
-        // Double check threshold inside RAF to avoid unnecessary calculations
         const scrollPosition = window.innerHeight + window.scrollY;
-        const triggerHeight = document.body.offsetHeight - 800; // Increased buffer
+        const triggerHeight = document.body.offsetHeight - 800;
 
         if (scrollPosition >= triggerHeight) {
             if (!isLoadingMore) {
@@ -241,29 +389,16 @@ function displayResults(repos) {
     resultsSection.classList.add('active');
 
     repos.forEach(repo => {
-        const card = createRepoCard(repo);
-        resultsContainer.appendChild(card);
+        resultsContainer.appendChild(createRepoCard(repo));
     });
 
-    // Animate cards with staggered effect
-    const cards = resultsContainer.querySelectorAll('.repo-card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px) scale(0.95)';
-
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0) scale(1)';
-        }, index * 80);
-    });
+    animateCardsIn(resultsContainer);
 }
 
 function updateResultsCount(count) {
     if (resultsCount) {
         if (count > 0) {
             resultsCount.textContent = `${count} sonuç bulundu`;
-            animateResultsCount();
         } else {
             resultsCount.textContent = '';
         }
@@ -292,7 +427,7 @@ function createRepoCard(repo) {
         <div class="card-header">
             <h3 class="repo-name">${escapeHtml(repo.name)}</h3>
             <button class="like-btn ${isLiked ? 'liked' : ''}" aria-label="Beğen">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     ${heartIcon}
                 </svg>
             </button>
@@ -324,7 +459,7 @@ function createRepoCard(repo) {
         </div>
         <a href="${repo.url}" target="_blank" rel="noopener noreferrer" class="repo-url">
             <span>GitHub'da Aç</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                 <polyline points="15 3 21 3 21 9"/>
                 <line x1="10" y1="14" x2="21" y2="3"/>
@@ -332,7 +467,6 @@ function createRepoCard(repo) {
         </a>
     `;
 
-    // Add event listener to like button
     const likeBtn = card.querySelector('.like-btn');
     likeBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -343,7 +477,7 @@ function createRepoCard(repo) {
     return card;
 }
 
-// Like System Functions
+// Like System
 function getLikedRepos() {
     return JSON.parse(localStorage.getItem('likedRepos') || '[]');
 }
@@ -353,37 +487,39 @@ function isRepoLiked(url) {
     return likes.some(r => r.url === url);
 }
 
+function likePop(btn) {
+    anim(btn, { transform: ['scale(1)', 'scale(1.22)', 'scale(1)'] }, {
+        duration: 0.4,
+        ease: EASE_SPRING
+    });
+}
+
 function toggleLike(repo, btn) {
     if (isRepoLiked(repo.url)) {
         removeLikedRepo(repo.url);
         btn.classList.remove('liked');
         btn.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="none" stroke="currentColor" stroke-width="2"/>
             </svg>
         `;
+        likePop(btn);
 
-        // If we represent favorites page, we should remove the card
         if (favoritesContainer.contains(btn.closest('.repo-card'))) {
-            loadFavorites(); // Reload to remove
-            loadRecommendations(); // Reload recommendations
+            loadFavorites();
+            loadRecommendations();
         }
     } else {
         saveLikedRepo(repo);
         btn.classList.add('liked');
         btn.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" stroke="none"/>
             </svg>
         `;
+        likePop(btn);
 
-        // Animate Heart
-        btn.style.animation = 'none';
-        setTimeout(() => {
-            btn.style.animation = 'heartBeat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both';
-        }, 10);
-
-        loadRecommendations(); // Update recommendations based on new like
+        loadRecommendations();
     }
 }
 
@@ -402,26 +538,23 @@ function removeLikedRepo(url) {
 }
 
 function loadFavorites() {
-    // Check if elements exist before using them
     const container = document.getElementById('favorites-container');
     const countDisplay = document.getElementById('favorites-count');
 
-    if (!container) return; // Exit if container doesn't exist on this page
+    if (!container) return;
 
     const likes = getLikedRepos();
     container.innerHTML = '';
 
     if (likes.length === 0) {
         container.innerHTML = `
-            <div class="repo-card empty-state" style="text-align: center; grid-column: 1 / -1; padding: 4rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="color: var(--text-muted); opacity: 0.5;">
+            <div class="repo-card empty-state">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="1.5"/>
                 </svg>
-                <h3 style="color: var(--text-light); font-size: 1.5rem; margin:0;">Henüz Favori Yok</h3>
-                <p style="color: var(--text-muted); font-size: 1rem;">Beğendiğiniz projeler burada saklanır.</p>
-                <button onclick="document.querySelector('[data-page=\\'search\\']').click()" style="margin-top: 1rem; padding: 0.8rem 1.5rem; background: var(--gradient-primary); border: none; border-radius: 50px; color: var(--dark-green); font-weight: bold; cursor: pointer;">
-                    Projeleri Keşfet
-                </button>
+                <h3>Henüz Favori Yok</h3>
+                <p>Beğendiğiniz projeler burada saklanır.</p>
+                <button onclick="document.querySelector('[data-page=\\'search\\']').click()">Projeleri Keşfet</button>
             </div>
         `;
         if (countDisplay) countDisplay.textContent = '';
@@ -431,12 +564,10 @@ function loadFavorites() {
     if (countDisplay) countDisplay.textContent = `${likes.length} favori repo`;
 
     likes.forEach(repo => {
-        const card = createRepoCard(repo);
-        container.appendChild(card);
+        container.appendChild(createRepoCard(repo));
     });
+    animateCardsIn(container);
 }
-
-
 
 // Recommendation System
 async function loadRecommendations() {
@@ -446,7 +577,6 @@ async function loadRecommendations() {
         return;
     }
 
-    // Extract most common topics or languages
     const topics = {};
     likes.forEach(repo => {
         if (repo.topics) {
@@ -456,14 +586,12 @@ async function loadRecommendations() {
         }
     });
 
-    // Sort topics by frequency
     const sortedTopics = Object.entries(topics)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 2)
         .map(e => e[0]);
 
     if (sortedTopics.length === 0) {
-        // Fallback to languages if no topics
         const langs = {};
         likes.forEach(repo => {
             if (repo.language) {
@@ -489,7 +617,6 @@ async function loadRecommendations() {
         const data = await response.json();
 
         if (data.repos && data.repos.length > 0) {
-            // Filter out already liked repos
             const newRecs = data.repos.filter(r => !isRepoLiked(r.url)).slice(0, 3);
 
             if (newRecs.length > 0) {
@@ -498,6 +625,7 @@ async function loadRecommendations() {
                     recommendationsContainer.appendChild(createRepoCard(repo));
                 });
                 recommendationsSection.style.display = 'block';
+                animateCardsIn(recommendationsContainer);
             } else {
                 recommendationsSection.style.display = 'none';
             }
@@ -509,16 +637,16 @@ async function loadRecommendations() {
 
 function showError(message) {
     resultsContainer.innerHTML = `
-        <div class="repo-card" style="text-align: center; grid-column: 1 / -1;">
-            <p style="color: var(--text-muted); font-size: 1.1rem;">${escapeHtml(message)}</p>
+        <div class="repo-card" style="text-align:center;grid-column:1/-1;">
+            <p style="color:var(--text-2);font-size:1.05rem;">${escapeHtml(message)}</p>
         </div>
     `;
 }
 
 function showNoResults() {
     resultsContainer.innerHTML = `
-        <div class="repo-card" style="text-align: center; grid-column: 1 / -1;">
-            <p style="color: var(--text-muted); font-size: 1.1rem;">Arama sonucu bulunamadı. Farklı bir terim deneyin.</p>
+        <div class="repo-card" style="text-align:center;grid-column:1/-1;">
+            <p style="color:var(--text-2);font-size:1.05rem;">Arama sonucu bulunamadı. Farklı bir terim deneyin.</p>
         </div>
     `;
 }
@@ -568,29 +696,25 @@ function scrollToResults() {
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// Enhanced search with scroll
 const originalPerformSearch = performSearch;
 performSearch = async function (query) {
     await originalPerformSearch(query);
     setTimeout(scrollToResults, 300);
 };
 
-// Add keyboard shortcuts
+// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-    // Cmd/Ctrl + K to focus search (hidden feature)
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         searchInput.focus();
         searchInput.select();
     }
 
-    // Escape to clear search
     if (e.key === 'Escape' && document.activeElement === searchInput) {
         searchInput.value = '';
         searchInput.blur();
     }
 
-    // Enter to search when input is focused
     if (e.key === 'Enter' && document.activeElement === searchInput) {
         const query = searchInput.value.trim();
         if (query) {
@@ -598,63 +722,3 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
-
-// Add search input animations
-searchInput.addEventListener('focus', () => {
-    searchInput.parentElement.style.transform = 'scale(1.02)';
-    searchInput.parentElement.style.boxShadow = '0 0 50px rgba(74, 124, 89, 0.4), 0 20px 60px rgba(0, 0, 0, 0.3)';
-});
-
-searchInput.addEventListener('blur', () => {
-    searchInput.parentElement.style.transform = 'scale(1)';
-    searchInput.parentElement.style.boxShadow = '';
-});
-
-// Add typing indicator effect with pulse
-let typingTimeout;
-searchInput.addEventListener('input', () => {
-    clearTimeout(typingTimeout);
-    searchInput.style.opacity = '0.9';
-    searchInput.parentElement.style.borderColor = 'rgba(74, 124, 89, 0.5)';
-
-    typingTimeout = setTimeout(() => {
-        searchInput.style.opacity = '1';
-        searchInput.parentElement.style.borderColor = '';
-    }, 200);
-});
-
-// Add search button glow effect on hover
-searchBtn.addEventListener('mouseenter', () => {
-    searchBtn.style.boxShadow = '0 10px 40px rgba(74, 124, 89, 0.5)';
-});
-
-searchBtn.addEventListener('mouseleave', () => {
-    searchBtn.style.boxShadow = '';
-});
-
-// Add results count animation
-function animateResultsCount() {
-    if (resultsCount && resultsCount.textContent) {
-        resultsCount.style.animation = 'none';
-        setTimeout(() => {
-            resultsCount.style.animation = 'fadeInScale 0.5s ease';
-        }, 10);
-    }
-}
-
-// Add CSS animation for results count
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeInScale {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-`;
-document.head.appendChild(style);
-
