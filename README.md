@@ -1,5 +1,4 @@
-<img width="1352" height="674" alt="Screenshot_2026-08-01_23-42-56" src="https://github.com/user-attachments/assets/818481fe-01f9-4f27-bd7c-cf94323fd678" />
-
+<img width="1346" height="676" alt="Screenshot_2026-08-01_23-44-04" src="https://github.com/user-attachments/assets/c9723114-92b1-4807-a55e-36dc1d89c07b" />
 
 
 # Repulse
