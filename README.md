@@ -8,7 +8,7 @@ Smart GitHub Repository Finder — searches repositories **by functionality**, a
 
 ## Features
 
-- **Smart Search** — understands natural-language sentences in English **and Turkish**, translates concepts to the English terms GitHub actually indexes (e.g. "yüz tanıma kütüphanesi" → `face recognition OR facial recognition OR face detection`), and searches name + description + topics + README in parallel
+- **Smart Search** — understands natural-language sentences in English and Turkish, translates concepts to the English terms GitHub actually indexes (e.g. "yüz tanıma kütüphanesi" → `face recognition OR facial recognition OR face detection`), and searches name + description + topics + README in parallel
 - **Intelligent Fallbacks** — if a translated query returns nothing, it automatically retries with your original words, so you always get the best possible results
 - **Deduplicated Results** — multiple GitHub API queries are merged client-side and duplicates are removed
 - **Sort Options** — by stars, last updated, or forks
