@@ -18,9 +18,14 @@ Smart GitHub Repository Finder — searches repositories **by functionality**, a
 
 ## How It Works
 
-The site is 100% static and talks directly to the [GitHub Search API](https://docs.github.com/en/rest/search) from the browser — no backend required. It runs the query twice (name/description/topics + README), merges and deduplicates the results, then renders them with `framer-motion` animations.
+The site is 100% static and talks directly to the [GitHub Search API](https://docs.github.com/en/rest/search) from the browser — no backend required. The API only supplies **raw candidates**; all relevance judgement happens client-side in two stages:
 
-Before querying, the [search-intelligence](js/search-intelligence.js) module normalizes the input: strips Turkish diacritics, recognizes ~50 multi-word concepts and ~100 word-level translations, handles Turkish grammatical suffixes ("kütüphanesi" → "kütüphane"), and groups synonyms into `OR` clauses — so repositories in any language match, not just Turkish ones.
+1. **Query understanding** — the [search-intelligence](js/search-intelligence.js) module normalizes the input: strips Turkish diacritics, recognizes multi-word concepts ("oyun motoru" → `game engine`, "isletim sistemi" → `operating system`), ~100 word-level translations ("haberleşme" → `communication`), Turkish grammatical suffixes ("kütüphanesi" → "kütüphane"), and groups synonyms into `OR` clauses — so repositories in any language match, not just Turkish ones.
+2. **Candidate rounds** — the API is queried in escalating tiers: name/topics match first, then precise AND, then the broad synonym OR chain (name + description + topics), plus a README round when results are thin, and finally the raw input as-is.
+3. **Functional scoring** — every candidate is scored by `scoreRepo()` against the query's concept terms: full phrase matches in the repo name are strongest, topic matches next, then a *description-coverage ratio* (how much of the description actually talks about the searched function). Generic filler words ("software", "tool") count only when the query itself is purely generic — so star-behemoths that merely mention the searched word lose to focused repositories. Near-ties fall back to popularity.
+4. **Transparency** — each result card shows which terms were matched ("Matched: operating system · os").
+
+The results are then rendered with `framer-motion` animations.
 
 > **Note:** The public GitHub API is rate-limited to 60 requests/hour per IP without a token. The API is only used for read-only search requests.
 

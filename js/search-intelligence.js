@@ -38,6 +38,7 @@ window.RepulseSearch = (function () {
         ['web uygulamasi', ['web application', 'web app', 'website']],
         ['web gelistirme', ['web development', 'frontend', 'backend']],
         ['oyun gelistirme', ['game development', 'gamedev', 'unity', 'unreal engine']],
+        ['oyun motoru', ['game engine', 'game engine development', 'gamedev']],
         ['mobil uygulama', ['mobile app', 'android', 'ios', 'flutter', 'react native']],
         ['masaustu uygulama', ['desktop app', 'desktop application', 'electron']],
         ['tarayici uzantisi', ['browser extension', 'chrome extension', 'firefox addon']],
@@ -60,6 +61,7 @@ window.RepulseSearch = (function () {
         ['blokzincir', ['blockchain', 'web3']],
         ['hisse senedi', ['stock market', 'stocks', 'trading']],
         ['e ticaret', ['ecommerce', 'e-commerce', 'shop']],
+        ['haberlesme', ['communication', 'messaging', 'telecom', 'networking']],
         ['isletim sistemi', ['operating system', 'os']],
         ['sanal makine', ['virtual machine', 'vm', 'virtualization']],
         ['arama motoru', ['search engine', 'search', 'elasticsearch']],
@@ -166,6 +168,9 @@ window.RepulseSearch = (function () {
         'ag': ['network'],
         'api': ['api', 'rest api'],
         'kutuphane': ['library'],
+        'haberlesme': ['communication', 'messaging', 'telecom'],
+        'iletisim': ['communication', 'messaging', 'telecom'],
+        'e-ticaret': ['ecommerce', 'e-commerce'],
         'arac': ['tool', 'tools'],
         'motor': ['engine'],
         'panel': ['dashboard', 'admin panel'],
@@ -305,6 +310,7 @@ window.RepulseSearch = (function () {
         const quoted = extractQuoted(raw);
         const withoutQuotes = removeQuoted(raw);
         const tokens = stripDiacritics(withoutQuotes).toLowerCase()
+            .replace(/-/g, ' ')
             .split(/\s+/)
             .map(sanitizeToken)
             .filter(t => t && t.length > 1);
@@ -404,15 +410,35 @@ window.RepulseSearch = (function () {
         const descText = repo.description || '';
         const descHit = hitsIn(descText);
 
+        // Words so generic that finding them in a description proves nothing
+        // about the repo's function. They are zeroed everywhere (description
+        // coverage, topic and name hits) but only while the query also
+        // contains a specific term — a purely generic query like "yazılım
+        // lazım" (software) must keep working, so the list stays dormant there.
+        const GENERIC_REPO_TERMS = new Set([
+            'software', 'tool', 'tools', 'app', 'apps', 'code', 'free',
+            'open source', 'open-source', 'repo', 'repository', 'repositories',
+            'github', 'development', 'project', 'projects', 'utility', 'utilities'
+        ]);
+        const genericLock = [...terms].some(t => !GENERIC_REPO_TERMS.has(t));
+        const blocked = t => genericLock && GENERIC_REPO_TERMS.has(t);
+
         // Coverage: share of description tokens that relate to the function.
         const descTokens = tokenize(descText);
         const descMatched = new Set();
-        descTokens.forEach(t => { if (words.has(t)) descMatched.add(t); });
-        phrases.forEach(p => { if (phraseIn(descTokens, p)) descMatched.add(p); });
+        descTokens.forEach(t => {
+            if (words.has(t) && !blocked(t)) descMatched.add(t);
+        });
+        phrases.forEach(p => {
+            if (!blocked(p) && phraseIn(descTokens, p)) descMatched.add(p);
+        });
         const descCoverage = descTokens.length > 0 ? descMatched.size / descTokens.length : 0;
 
-        const strength = (h, phraseW, wordW) =>
-            h.phraseHits.length > 0 ? phraseW : (h.wordHits.length > 0 ? wordW : 0);
+        const strength = (h, phraseW, wordW) => {
+            if (h.phraseHits.some(p => !blocked(p))) return phraseW;
+            if (h.wordHits.some(w => !blocked(w))) return wordW;
+            return 0;
+        };
 
         const score = (
             strength(nameHit, 1, 0.6) * 4 +
