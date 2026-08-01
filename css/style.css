@@ -44,6 +44,11 @@
 
 html {
     scroll-behavior: smooth;
+    /* The design is built for a viewport ~25% larger than a typical screen;
+       at 100% browser zoom the hero feels flat/oversized. Scaling the root
+       to 80% reproduces exactly what the user confirmed looks right at 80%
+       browser zoom. Tune --site-zoom in one place. */
+    zoom: var(--site-zoom, 0.8);
 }
 
 body {
