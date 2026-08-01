@@ -1,79 +1,50 @@
 # Repulse
 
-Akıllı GitHub Repository Finder — isim, açıklama, konular ve README içeriğinde **işlevsellik bazlı** arama yapan, salt-okunur ve web tabanlı bir araç.
+Smart GitHub Repository Finder — searches repositories **by functionality**, across names, descriptions, topics and README content. Read-only, web-based, and works entirely in your browser.
 
-![Repulse](public/images/favicon.svg)
+**Live:** <https://mert-byt.github.io/Repulse>
 
-## Özellikler
+## Features
 
-- **Akıllı Arama** — Doğal dilde yazılmış cümleleri anlar, Türkçe/İngilizce stop-word'leri temizler ve isim + açıklama + konular + README üzerinde çoklu arama yapar
-- **Çoklu Sonuç Kaynağı** — GitHub API üzerinde 3 farklı arama birleştirilir ve tekrarlar temizlenir
-- **Sıralama Seçenekleri** — Yıldız, güncellenme tarihi ve fork sayısına göre sıralama
-- **Keşif Modu** — Boş arama yaptığınızda popüler repolar otomatik keşfedilir
-- **Sonsuz Kaydırma** — Sayfa sonuna gelince otomatik yeni sonuçlar yüklenir
-- **Beğenilenler** — localStorage'da saklanır, beğenilerinize göre öneriler üretilir
-- **Güvenli** — Salt-okunur, dosya indirmez, çalıştırmaz, kişisel veri toplamaz
-- **Klavye Kısayolları** — `Ctrl/⌘ + K` arama kutusuna odaklanır, `Esc` temizler
+- **Smart Search** — understands natural-language sentences (Turkish & English), strips stop words, and searches name + description + topics + README in parallel
+- **Deduplicated Results** — multiple GitHub API queries are merged client-side and duplicates are removed
+- **Sort Options** — by stars, last updated, or forks
+- **Discover Mode** — an empty search loads popular repositories automatically
+- **Infinite Scroll** — more results load automatically as you scroll
+- **Favorites** — stored in `localStorage`, with recommendations generated from your likes
+- **Safe** — read-only; never downloads, executes or collects anything
+- **Keyboard Shortcuts** — `Ctrl/⌘ + K` focuses the search box, `Esc` clears it
 
-## Kurulum
+## How It Works
 
-```bash
-npm install
-cp .env.example .env   # GITHUB_TOKEN ekleyin (opsiyonel, hız sınırı için önerilir)
-npm start
-```
+The site is 100% static and talks directly to the [GitHub Search API](https://docs.github.com/en/rest/search) from the browser — no backend required. It runs the query twice (name/description/topics + README), merges and deduplicates the results, then renders them with `framer-motion` animations.
 
-Sunucu varsayılan olarak `http://localhost:3000` adresinde çalışır. Farklı port için:
+> **Note:** The public GitHub API is rate-limited to 60 requests/hour per IP without a token. The API is only used for read-only search requests.
 
-```bash
-PORT=9700 npm start
-```
+## Deployment (GitHub Pages)
 
-### GITHUB_TOKEN (opsiyonel)
-GitHub API'si kimliksiz isteklerde saat başı 60 istek ile sınırlıdır. `GITHUB_TOKEN` eklerseniz limit 5000'e çıkar:
-- GitHub → Settings → Developer settings → Personal access tokens → Generate new token
-- `repo` (public_repo) kapsamı yeterlidir
-- Token'ı `.env` dosyasına ekleyin (asla repo'ya commit etmeyin)
+The site deploys automatically from the `main` branch via GitHub Pages:
 
-## API
+1. In the repo: **Settings → Pages**
+2. Source: **Deploy from a branch** → Branch: `main`, path: `/` (root)
+3. The site is served at `https://<username>.github.io/Repulse/`
 
-### `GET /api/search`
-Arama yapmak için ana uç nokta.
+All asset paths are relative, so the site works under any sub-path.
 
-| Parametre | Açıklama | Varsayılan |
-|-----------|----------|------------|
-| `q` | Arama terimi (zorunlu) | — |
-| `sort` | `stars` \| `updated` \| `forks` | `stars` |
-| `order` | `desc` \| `asc` | `desc` |
-| `page` | Sayfa numarası | `1` |
-
-```bash
-curl "http://localhost:3000/api/search?q=machine+learning&sort=stars"
-```
-
-### `POST /api/search`
-Geriye dönük uyumluluk için (JSON gövde: `{ query, sort, order }`).
-
-## Proje Yapısı
+## Project Structure
 
 ```
-├── server.js              # Express sunucusu + API
-├── src/finder.js          # GitHub arama mantığı (Octokit)
-├── bin/github-search      # CLI aracı
-├── test/finder.test.js    # Unit testler
-└── public/                # Statik site (HTML/CSS/JS)
-    ├── index.html
-    ├── css/               # style.css, filter.css
-    ├── js/                # main.js + vendor/motion.min.js (framer-motion)
-    └── images/            # favicon.svg
+├── index.html              # Single-page app (Search / Security / Favorites)
+├── css/
+│   ├── style.css           # Monochrome design system
+│   └── filter.css          # Sort dropdown menu
+├── js/
+│   ├── main.js             # App logic + GitHub API client
+│   └── vendor/motion.min.js # framer-motion DOM build (standalone)
+└── images/
+    └── favicon.svg         # Brand mark
 ```
 
-## Test
+## License
 
-```bash
-npm test
-```
-
-## Lisans
-
-ISC — bkz. [LICENSE](LICENSE)
+ISC — see [LICENSE](LICENSE)

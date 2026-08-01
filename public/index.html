@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repulse — Akıllı GitHub Repository Finder</title>
+    <title>Repulse — Smart GitHub Repository Finder</title>
     <meta name="description"
-        content="Repulse, GitHub repolarını isim, açıklama, konular ve README içeriğinde akıllıca arayan, güvenli ve salt-okunur bir repository finder'dır.">
-    <meta property="og:title" content="Repulse — Akıllı GitHub Repository Finder">
+        content="Repulse searches GitHub repositories by functionality — across names, descriptions, topics and README content. Safe, read-only, web-based.">
+    <meta property="og:title" content="Repulse — Smart GitHub Repository Finder">
     <meta property="og:description"
-        content="GitHub repolarını işlevselliğe göre akıllıca keşfedin. Güvenli, salt-okunur, web tabanlı.">
+        content="Discover GitHub repositories by functionality. Safe, read-only, web-based.">
     <meta property="og:type" content="website">
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    <link rel="apple-touch-icon" href="/images/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <link rel="apple-touch-icon" href="images/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/filter.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/filter.css">
 </head>
 
 <body>
@@ -28,7 +28,7 @@
 
     <div class="container">
         <header class="header" id="site-header">
-            <a class="logo" href="/" aria-label="Repulse ana sayfa">
+            <a class="logo" href="." aria-label="Repulse home">
                 <svg class="logo-svg" width="44" height="44" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="gradTopLeft" x1="100%" y1="100%" x2="0%" y2="0%">
@@ -69,27 +69,27 @@
                 </svg>
                 <span class="logo-text">Repulse</span>
             </a>
-            <nav class="nav" aria-label="Ana gezinme">
+            <nav class="nav" aria-label="Main navigation">
                 <button class="nav-btn active" data-page="search">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
                         <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
-                    <span>Arama</span>
+                    <span>Search</span>
                 </button>
                 <button class="nav-btn" data-page="security">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <span>Güvenlik</span>
+                    <span>Security</span>
                 </button>
                 <button class="nav-btn" data-page="favorites">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
                             stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
                     </svg>
-                    <span>Beğenilenler</span>
+                    <span>Favorites</span>
                 </button>
             </nav>
         </header>
@@ -101,7 +101,7 @@
                     <div class="hero-content">
                         <div class="hero-badge">
                             <span class="badge-dot"></span>
-                            <span>Akıllı Arama</span>
+                            <span>Smart Search</span>
                         </div>
                         <h1 class="main-title">
                             <span class="title-line">GitHub</span>
@@ -109,8 +109,8 @@
                             <span class="title-line highlight">Finder</span>
                         </h1>
                         <p class="subtitle">
-                            İsme, açıklamaya, konulara ve README içeriğine göre arama yapın.
-                            İşlevsellik bazlı sonuçlarla tam ihtiyacınız olan repoyu bulun.
+                            Search by name, description, topics and README content.
+                            Get results that match what your project actually needs.
                         </p>
 
                         <div class="search-container">
@@ -121,10 +121,10 @@
                                     <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"
                                         stroke-linecap="round" />
                                 </svg>
-                                <input type="text" id="search-input" placeholder="Arama yapın..."
-                                    aria-label="Arama yapın" autocomplete="off" />
-                                <button id="search-btn" class="search-button" aria-label="Ara">
-                                    <span>Ara</span>
+                                <input type="text" id="search-input" placeholder="Search..."
+                                    aria-label="Search repositories" autocomplete="off" />
+                                <button id="search-btn" class="search-button" aria-label="Search">
+                                    <span>Search</span>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round" />
@@ -141,7 +141,7 @@
                                             <path d="M3 6h18M6 12h12M10 18h8" stroke="currentColor" stroke-width="2"
                                                 stroke-linecap="round" />
                                         </svg>
-                                        <span>Sıralama</span>
+                                        <span>Sort</span>
                                         <svg class="filter-chevron" width="14" height="14" viewBox="0 0 24 24"
                                             fill="none" aria-hidden="true">
                                             <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2"
@@ -151,13 +151,13 @@
 
                                     <div class="filter-branches" id="filter-branches">
                                         <button class="branch-option option-top" data-sort="updated">
-                                            <span class="branch-label">Tarih</span>
+                                            <span class="branch-label">Updated</span>
                                         </button>
                                         <button class="branch-option option-middle active" data-sort="stars">
-                                            <span class="branch-label">Yıldız</span>
+                                            <span class="branch-label">Stars</span>
                                         </button>
                                         <button class="branch-option option-bottom" data-sort="forks">
-                                            <span class="branch-label">Forklar</span>
+                                            <span class="branch-label">Forks</span>
                                         </button>
                                     </div>
                                     <input type="hidden" id="sort-select" value="stars">
@@ -170,8 +170,8 @@
                                     <path d="M12 16v-5M12 8h.01" stroke="currentColor" stroke-width="2"
                                         stroke-linecap="round" />
                                 </svg>
-                                İpucu: Tam cümleler yazabilirsiniz. Sistem işlevsellik ve açıklamalarda da arama
-                                yapar.
+                                Tip: You can write full sentences. The system also searches functionality and
+                                descriptions.
                             </p>
                         </div>
                     </div>
@@ -192,14 +192,14 @@
                                     <span class="term-cursor"></span>
                                 </div>
                                 <div class="term-line dim" id="term-line-1"><span
-                                        class="term-prompt">→</span><span class="term-text">isim, açıklama, konular,
-                                        README taranıyor…</span></div>
+                                        class="term-prompt">→</span><span class="term-text">scanning name, description,
+                                        topics, README…</span></div>
                                 <div class="term-line dim" id="term-line-2"><span
-                                        class="term-prompt">→</span><span class="term-text">3 kaynak birleştiriliyor…
-                                        repo bulundu</span></div>
+                                        class="term-prompt">→</span><span class="term-text">merging 2 sources…
+                                        deduplicating</span></div>
                                 <div class="term-line ok" id="term-line-3"><span
-                                        class="term-prompt">✓</span><span class="term-text">128 repo bulundu</span>
-                                </div>
+                                        class="term-prompt">✓</span><span class="term-text">128 repositories
+                                        found</span></div>
                                 <div class="term-line ok" id="term-line-4"><span
                                         class="term-prompt">✓</span><span class="term-text">transformers — 98K ★</span>
                                 </div>
@@ -210,10 +210,10 @@
                                         class="term-prompt">✓</span><span class="term-text">scikit-learn — 62K ★</span>
                                 </div>
                                 <div class="term-line ok" id="term-line-7"><span class="term-prompt">✓</span><span
-                                        class="term-text">sonuçlar hazır — sıralama: yıldız</span></div>
+                                        class="term-text">results ready — sorted by stars</span></div>
                             </div>
                         </div>
-                        <div class="terminal-caption">Salt-okunur · Web tabanlı · Sadece bilgi</div>
+                        <div class="terminal-caption">Read-only · Web-based · Information only</div>
                     </div>
                 </div>
             </div>
@@ -221,8 +221,8 @@
             <!-- Recommendations Section -->
             <div class="results-section" id="recommendations-section" style="display: none;">
                 <div class="results-header">
-                    <h2 class="results-title">Önerilen Repolar</h2>
-                    <span class="results-sub">Beğenilerinize göre</span>
+                    <h2 class="results-title">Recommended Repos</h2>
+                    <span class="results-sub">Based on your likes</span>
                 </div>
                 <div class="results-container" id="recommendations-container"></div>
             </div>
@@ -230,7 +230,7 @@
             <!-- Results Section -->
             <div class="results-section" id="results-section">
                 <div class="results-header">
-                    <h2 class="results-title">Arama Sonuçları</h2>
+                    <h2 class="results-title">Search Results</h2>
                     <div class="results-count" id="results-count"></div>
                 </div>
                 <div class="results-container" id="results-container"></div>
@@ -240,7 +240,7 @@
         <!-- Security Page -->
         <div class="page" id="security-page">
             <div class="security-content">
-                <h2 class="security-title">Güvenlik ve Gizlilik</h2>
+                <h2 class="security-title">Security &amp; Privacy</h2>
 
                 <div class="security-grid">
                     <div class="security-card">
@@ -250,9 +250,9 @@
                                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
-                        <h3>Tamamen Güvenli</h3>
-                        <p>Bu araç sadece GitHub API'sini kullanarak arama yapar. Hiçbir dosya indirmez, çalıştırmaz
-                            veya sisteminize erişmez.</p>
+                        <h3>Completely Safe</h3>
+                        <p>This tool only uses the GitHub API to search. It never downloads, executes or accesses any
+                            file on your system.</p>
                     </div>
 
                     <div class="security-card">
@@ -266,9 +266,8 @@
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
-                        <h3>Sadece Okuma</h3>
-                        <p>Tüm işlemler salt okunur modda gerçekleşir. Sisteminizde herhangi bir değişiklik yapılmaz.
-                        </p>
+                        <h3>Read-Only</h3>
+                        <p>All operations happen in read-only mode. Nothing is modified on your system.</p>
                     </div>
 
                     <div class="security-card">
@@ -280,9 +279,9 @@
                                     stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
-                        <h3>Web Tabanlı Güvenlik</h3>
-                        <p>Uygulama tarayıcınızda çalışır, bilgisayarınıza hiçbir yazılım yüklenmez. Kişisel verileriniz
-                            toplanmaz veya saklanmaz.</p>
+                        <h3>Web-Based Security</h3>
+                        <p>The app runs in your browser. No software is installed, and no personal data is collected
+                            or stored.</p>
                     </div>
 
                     <div class="security-card">
@@ -292,45 +291,45 @@
                                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
-                        <h3>API Güvenliği</h3>
-                        <p>GitHub'ın resmi ve güvenli API'si kullanılır. Tüm bağlantılar şifrelenmiş HTTPS üzerinden
-                            yapılır.</p>
+                        <h3>API Security</h3>
+                        <p>GitHub's official API is used over encrypted HTTPS connections. Only publicly available
+                            data is shown.</p>
                     </div>
                 </div>
 
                 <div class="security-info">
-                    <h3>Nasıl Çalışır?</h3>
+                    <h3>How It Works</h3>
                     <div class="info-steps">
                         <div class="step">
                             <div class="step-number">01</div>
                             <div class="step-content">
-                                <h4>Akıllı Arama İsteği</h4>
-                                <p>Arama teriminiz GitHub API'sine gönderilir. Sistem isim, açıklama, konular ve README
-                                    dosyalarında arama yapar.</p>
+                                <h4>Smart Search Request</h4>
+                                <p>Your query is sent to the GitHub API. The system searches names, descriptions,
+                                    topics and README files.</p>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">02</div>
                             <div class="step-content">
-                                <h4>Çoklu Dil Desteği</h4>
-                                <p>Türkçe, İngilizce veya başka dillerde arama yapabilirsiniz. Sistem tüm dillerdeki
-                                    repoları bulur.</p>
+                                <h4>Multi-Language Support</h4>
+                                <p>Search in any language. The system finds repositories written in all programming
+                                    languages.</p>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-number">03</div>
                             <div class="step-content">
-                                <h4>Görüntüleme</h4>
-                                <p>Sonuçlar ekranda gösterilir, hiçbir şey indirilmez. İşlevsellik bazlı arama ile daha
-                                    alakalı sonuçlar alırsınız.</p>
+                                <h4>Display</h4>
+                                <p>Results are shown on screen — nothing is downloaded. Functionality-based search
+                                    surfaces more relevant results.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="security-note">
-                    <p><strong>Önemli:</strong> Virüslü veya zararlı içerik aramanız durumunda bile sisteminiz
-                        güvendedir. Araç sadece bilgi gösterir, hiçbir dosya indirmez veya çalıştırmaz.</p>
+                    <p><strong>Important:</strong> Even if you search for malicious content, your system stays
+                        safe — the tool only displays information and never downloads or executes anything.</p>
                 </div>
             </div>
         </div>
@@ -343,7 +342,7 @@
                         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
                             stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
                     </svg>
-                    Beğenilenler
+                    Favorites
                 </h2>
                 <div class="results-count" id="favorites-count"></div>
                 <div class="results-container" id="favorites-container"></div>
@@ -356,11 +355,11 @@
         <div class="loader">
             <div class="loader-ring"></div>
         </div>
-        <p class="loading-text">Aranıyor…</p>
+        <p class="loading-text">Searching…</p>
     </div>
 
-    <script src="/js/vendor/motion.min.js"></script>
-    <script src="/js/main.js"></script>
+    <script src="js/vendor/motion.min.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>

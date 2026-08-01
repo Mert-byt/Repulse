@@ -1,36 +1,19 @@
 {
   "name": "repulse",
   "version": "1.0.0",
-  "description": "Akıllı GitHub Repository Finder — isim, açıklama, konular ve README içeriğinde işlevsellik bazlı arama yapar.",
-  "main": "src/finder.js",
-  "bin": {
-    "github-search": "bin/github-search"
-  },
-  "scripts": {
-    "start": "node server.js",
-    "cli": "node bin/github-search",
-    "test": "node test/finder.test.js"
-  },
+  "description": "Smart GitHub Repository Finder — searches repositories by functionality across names, descriptions, topics and README content.",
+  "private": true,
   "keywords": [
     "github",
     "repository",
     "search",
-    "finder",
-    "cli"
+    "finder"
   ],
   "author": "Mert-byt",
   "license": "ISC",
-  "type": "commonjs",
   "repository": {
     "type": "git",
     "url": "https://github.com/Mert-byt/Repulse.git"
   },
-  "homepage": "https://github.com/Mert-byt/Repulse",
-  "dependencies": {
-    "@octokit/rest": "^22.0.1",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.2.1",
-    "framer-motion": "^12.43.0"
-  }
+  "homepage": "https://mert-byt.github.io/Repulse"
 }

@@ -27,12 +27,7 @@ const EASE_OUT = [0.22, 1, 0.36, 1];
 const EASE_SPRING = [0.34, 1.56, 0.64, 1];
 
 function anim(target, keyframes, options = {}) {
-    if (REDUCED_MOTION) {
-        if (target instanceof Element || target instanceof NodeList) {
-            return null;
-        }
-        return null;
-    }
+    if (REDUCED_MOTION) return null;
     return M.animate(target, keyframes, options);
 }
 
@@ -165,7 +160,6 @@ function playTerminalSequence() {
     const lineEls = [1, 2, 3, 4, 5, 6, 7].map(n => document.getElementById(`term-line-${n}`));
 
     const fullText = cmdEl.textContent;
-    let done = [];
 
     const typeChar = (charIndex) => {
         cmdEl.textContent = fullText.slice(0, charIndex + 1);
@@ -186,6 +180,7 @@ function playTerminalSequence() {
         return;
     }
 
+    const done = [];
     for (let i = 0; i <= fullText.length; i++) {
         done.push(new Promise(resolve => setTimeout(() => { typeChar(i); resolve(); }, 30 + i * 22)));
     }
@@ -241,6 +236,66 @@ document.addEventListener('DOMContentLoaded', () => {
     playHeroEntrance();
 });
 
+// ---------- GitHub API (client-side) ----------
+const GITHUB_API = 'https://api.github.com/search/repositories';
+
+// Lightweight natural language processing — strips stop words from long queries
+const STOP_WORDS = ['bir', 've', 'ile', 'için', 'bu', 'şu', 'o', 'bana', 'yapılmış', 'olan', 'göster', 'bul', 'getir', 'listele', 'istiyorum', 'the', 'and', 'for', 'with', 'made', 'in'];
+
+function buildSmartQuery(input) {
+    const terms = input.toLowerCase().split(/\s+/);
+
+    let cleaned = terms;
+    if (terms.length > 3) {
+        cleaned = terms.filter(t => !STOP_WORDS.includes(t) && t.length > 1);
+    }
+
+    if (cleaned.length === 0) return input;
+    return cleaned.join(' ');
+}
+
+function mapRepo(repo) {
+    return {
+        name: repo.full_name,
+        description: repo.description,
+        url: repo.html_url,
+        stars: repo.stargazers_count,
+        forks: repo.forks_count,
+        language: repo.language,
+        updated_at: repo.updated_at,
+        topics: repo.topics || [],
+        html_url: repo.html_url,
+        full_name: repo.full_name,
+        stargazers_count: repo.stargazers_count,
+        forks_count: repo.forks_count
+    };
+}
+
+// Search across name/description/topics + README, then merge and deduplicate
+async function searchGitHub(query, sort, page) {
+    const smartQ = buildSmartQuery(query);
+    const base = `q=${encodeURIComponent(`${smartQ} in:name,description,topics`)}&sort=${sort}&order=desc`;
+    const mainUrl = `${GITHUB_API}?${base}&per_page=20&page=${page}`;
+    const readmeUrl = `${GITHUB_API}?q=${encodeURIComponent(`${query.trim()} in:readme`)}&sort=${sort}&order=desc&per_page=15&page=${page}`;
+
+    const [mainRes, readmeRes] = await Promise.all([fetch(mainUrl), fetch(readmeUrl)]);
+
+    if (!mainRes.ok && !readmeRes.ok) {
+        throw new Error(`GitHub API error: ${mainRes.status}`);
+    }
+
+    const [mainData, readmeData] = await Promise.all([mainRes.json(), readmeRes.json()]);
+
+    const map = new Map();
+    (mainData.items || []).forEach(repo => map.set(repo.id, repo));
+    (readmeData.items || []).forEach(repo => {
+        if (!map.has(repo.id)) map.set(repo.id, repo);
+    });
+
+    const items = [...map.values()].slice(0, 20).map(mapRepo);
+    return { items, total_count: mainData.total_count || items.length };
+}
+
 // State for Infinite Scroll
 let currentPage = 1;
 let currentQuery = '';
@@ -269,16 +324,14 @@ async function performSearch(query, isNewSearch = true) {
         isLoadingMore = true;
         const loader = document.createElement('div');
         loader.id = 'scroll-loading';
-        loader.textContent = 'Daha fazla yükleniyor...';
+        loader.textContent = 'Loading more...';
         loader.style.cssText = 'text-align:center;padding:1.2rem;grid-column:1/-1;color:var(--text-3);font-family:var(--font-mono);font-size:0.85rem;';
         resultsContainer.appendChild(loader);
     }
 
     try {
         const sortValue = sortSelect ? sortSelect.value : 'stars';
-        const url = `/api/search?q=${encodeURIComponent(currentQuery)}&sort=${sortValue}&page=${currentPage}`;
-        const response = await fetch(url);
-        const data = await response.json();
+        const data = await searchGitHub(currentQuery, sortValue, currentPage);
 
         const existingLoader = document.getElementById('scroll-loading');
         if (existingLoader) existingLoader.remove();
@@ -287,7 +340,7 @@ async function performSearch(query, isNewSearch = true) {
 
         if (data.items && data.items.length > 0) {
             if (isNewSearch && resultsCount) {
-                resultsCount.textContent = `${formatNumber(data.total_count || data.items.length)} sonuç bulundu`;
+                resultsCount.textContent = `${formatNumber(data.total_count || data.items.length)} results found`;
                 anim(resultsCount, { opacity: [0, 1], transform: ['scale(0.96)', 'scale(1)'] }, {
                     duration: 0.3, ease: EASE_SPRING
                 });
@@ -310,7 +363,7 @@ async function performSearch(query, isNewSearch = true) {
         if (existingLoader) existingLoader.remove();
         if (isNewSearch) {
             hideLoading();
-            showError('Arama sırasında bir hata oluştu.');
+            showError('An error occurred while searching. Rate limits on the public GitHub API may apply.');
         }
         isLoadingMore = false;
     }
@@ -325,19 +378,18 @@ async function loadRandomDiscoverRepos() {
 
     if (currentPage === 1) {
         resultsContainer.innerHTML = '';
-        if (resultsCount) resultsCount.textContent = 'Keşfet: Popüler Repolar';
+        if (resultsCount) resultsCount.textContent = 'Discover: Popular Repos';
         resultsSection.classList.add('active');
     }
 
     const loader = document.createElement('div');
     loader.id = 'scroll-loading';
-    loader.innerHTML = '<span>Keşfediliyor...</span>';
+    loader.innerHTML = '<span>Exploring...</span>';
     loader.style.cssText = 'text-align:center;padding:1.2rem;grid-column:1/-1;color:var(--text-3);font-family:var(--font-mono);font-size:0.85rem;';
     resultsContainer.appendChild(loader);
 
     try {
-        const response = await fetch(`/api/search?q=${topic}&sort=stars&page=${currentPage}`);
-        const data = await response.json();
+        const data = await searchGitHub(topic, 'stars', currentPage);
 
         const existingLoader = document.getElementById('scroll-loading');
         if (existingLoader) existingLoader.remove();
@@ -398,7 +450,7 @@ function displayResults(repos) {
 function updateResultsCount(count) {
     if (resultsCount) {
         if (count > 0) {
-            resultsCount.textContent = `${count} sonuç bulundu`;
+            resultsCount.textContent = `${count} results found`;
         } else {
             resultsCount.textContent = '';
         }
@@ -411,8 +463,8 @@ function createRepoCard(repo) {
 
     const stars = formatNumber(repo.stars);
     const forks = formatNumber(repo.forks);
-    const language = repo.language || 'Bilinmiyor';
-    const description = repo.description || 'Açıklama yok';
+    const language = repo.language || 'Unknown';
+    const description = repo.description || 'No description';
     const topics = repo.topics || [];
     const topicsHtml = topics.slice(0, 3).map(topic =>
         `<span class="repo-topic">${escapeHtml(topic)}</span>`
@@ -426,7 +478,7 @@ function createRepoCard(repo) {
     card.innerHTML = `
         <div class="card-header">
             <h3 class="repo-name">${escapeHtml(repo.name)}</h3>
-            <button class="like-btn ${isLiked ? 'liked' : ''}" aria-label="Beğen">
+            <button class="like-btn ${isLiked ? 'liked' : ''}" aria-label="Like">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     ${heartIcon}
                 </svg>
@@ -458,7 +510,7 @@ function createRepoCard(repo) {
             </div>
         </div>
         <a href="${repo.url}" target="_blank" rel="noopener noreferrer" class="repo-url">
-            <span>GitHub'da Aç</span>
+            <span>Open on GitHub</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                 <polyline points="15 3 21 3 21 9"/>
@@ -552,16 +604,16 @@ function loadFavorites() {
                 <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="currentColor" stroke-width="1.5"/>
                 </svg>
-                <h3>Henüz Favori Yok</h3>
-                <p>Beğendiğiniz projeler burada saklanır.</p>
-                <button onclick="document.querySelector('[data-page=\\'search\\']').click()">Projeleri Keşfet</button>
+                <h3>No Favorites Yet</h3>
+                <p>Your liked projects will be stored here.</p>
+                <button onclick="document.querySelector('[data-page=\\'search\\']').click()">Explore Projects</button>
             </div>
         `;
         if (countDisplay) countDisplay.textContent = '';
         return;
     }
 
-    if (countDisplay) countDisplay.textContent = `${likes.length} favori repo`;
+    if (countDisplay) countDisplay.textContent = `${likes.length} favorite repos`;
 
     likes.forEach(repo => {
         container.appendChild(createRepoCard(repo));
@@ -609,15 +661,10 @@ async function loadRecommendations() {
     const query = sortedTopics.join(' ');
 
     try {
-        const response = await fetch('/api/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, sort: 'stars', order: 'desc' })
-        });
-        const data = await response.json();
+        const data = await searchGitHub(query, 'stars', 1);
 
-        if (data.repos && data.repos.length > 0) {
-            const newRecs = data.repos.filter(r => !isRepoLiked(r.url)).slice(0, 3);
+        if (data.items && data.items.length > 0) {
+            const newRecs = data.items.filter(r => !isRepoLiked(r.url)).slice(0, 3);
 
             if (newRecs.length > 0) {
                 recommendationsContainer.innerHTML = '';
@@ -646,7 +693,7 @@ function showError(message) {
 function showNoResults() {
     resultsContainer.innerHTML = `
         <div class="repo-card" style="text-align:center;grid-column:1/-1;">
-            <p style="color:var(--text-2);font-size:1.05rem;">Arama sonucu bulunamadı. Farklı bir terim deneyin.</p>
+            <p style="color:var(--text-2);font-size:1.05rem;">No results found. Try a different term.</p>
         </div>
     `;
 }
